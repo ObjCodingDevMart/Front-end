@@ -43,7 +43,8 @@ dependencies {
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation(libs.hilt.navigation.compose)
+
     implementation(platform(libs.okhttp.bom))
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
@@ -54,4 +55,10 @@ dependencies {
     kapt(libs.hilt.compiler)
 
     implementation(libs.datastore)
+    
+    // Material Icons
+    implementation(libs.material.icons.extended)
+    
+    // Coil for image loading
+    implementation(libs.coil.compose)
 }

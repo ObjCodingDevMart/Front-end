@@ -3,7 +3,7 @@ package com.example.devmart.data.remote
 import retrofit2.http.GET
 import retrofit2.http.Path
 
-data class ProductDto(val id: String, val title: String, val price: Long, val imageUrl: String?)
+data class ProductDto(val id: String,val brand:String, val title: String, val price: Long, val imageUrl: String?)
 
 interface ProductApi {
     @GET("v1/products") suspend fun list(): List<ProductDto>
