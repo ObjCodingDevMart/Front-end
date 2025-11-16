@@ -6,4 +6,4 @@ import com.example.devmart.domain.model.Product
 import com.example.devmart.domain.model.User
 
 fun UserDto.toDomain() = User(id, email, name)
-fun ProductDto.toDomain() = Product(id, title, price, imageUrl)
+fun ProductDto.toDomain() = Product(id, brand , title, price, imageUrl)

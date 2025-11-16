@@ -4,18 +4,15 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rememberCoroutineScope
@@ -35,6 +32,8 @@ import com.example.devmart.ui.component.BottomNavigationBar
 import com.example.devmart.ui.component.ProductCard
 import com.example.devmart.ui.theme.DevMartTheme
 
+import com.example.devmart.ui.theme.*
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,12 +45,12 @@ fun HomeScreen(
     // 임시 데이터
     val products = remember {
         listOf(
-            Product("1", "Json 명함 제작", 60000, null),
-            Product("2", "Json 명함 제작", 60000, null),
-            Product("3", "Json 명함 제작", 60000, null),
-            Product("4", "Json 명함 제작", 60000, null),
-            Product("5", "Json 명함 제작", 60000, null),
-            Product("6", "Json 명함 제작", 60000, null),
+            Product("1", "Json","Json 명함 제작", 60000, null),
+            Product("1", "Json","Json 명함 제작", 60000, null),
+            Product("1", "Json","Json 명함 제작", 60000, null),
+            Product("1", "Json","Json 명함 제작", 60000, null),
+            Product("1", "Json","Json 명함 제작", 60000, null),
+            Product("1", "Json","Json 명함 제작", 60000, null),
         )
     }
     
@@ -66,17 +65,13 @@ fun HomeScreen(
                     Text(
                         text = "Dev Mart",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
+                        fontSize = 25.sp
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = { /* 뒤로가기 */ }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
+
 
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = DevWhite
                 )
             )
         },
@@ -211,7 +206,7 @@ fun ImageSliderBanner() {
                         .clip(RoundedCornerShape(4.dp))
                         .background(
                             if (currentPage == index) 
-                                Color.White 
+                                Color.White
                             else 
                                 Color.White.copy(alpha = 0.5f)
                         )
@@ -227,22 +222,23 @@ fun FilterChips(
     selectedCategory: String,
     onCategorySelected: (String) -> Unit
 ) {
-    Row(
+    LazyRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(horizontal = 0.dp)
     ) {
-        categories.forEach { category ->
+        items(categories) { category ->
             FilterChip(
                 selected = category == selectedCategory,
                 onClick = { onCategorySelected(category) },
                 label = { Text(category, fontSize = 13.sp) },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Color(0xFF1976D2),
-                    selectedLabelColor = Color.White,
-                    containerColor = Color(0xFFF5F5F5),
-                    labelColor = Color(0xFF424242)
+                    selectedContainerColor = DevNeyvy,
+                    selectedLabelColor = DevWhite,
+                    containerColor = DevGray,
+                    labelColor = DevBlack
                 ),
                 shape = RoundedCornerShape(20.dp)
             )

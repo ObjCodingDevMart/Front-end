@@ -13,12 +13,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.devmart.domain.model.Product
+import com.example.devmart.ui.theme.DevFonts
+
+import com.example.devmart.ui.theme.*
 
 @Composable
 fun ProductCard(
@@ -32,7 +36,7 @@ fun ProductCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = DevWhite)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth()
@@ -42,7 +46,7 @@ fun ProductCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp)
-                    .background(Color(0xFFF5F5F5))
+                    .background(DevWhite)
                     .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
                 contentAlignment = Alignment.Center
             ) {
@@ -58,7 +62,7 @@ fun ProductCard(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color(0xFFE0E0E0))
+                            .background(DevGray)
                     )
                 }
             }
@@ -70,7 +74,7 @@ fun ProductCard(
                     .padding(12.dp)
             ) {
                 Text(
-                    text = product.title,
+                    text = product.brand,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 2,
@@ -78,10 +82,21 @@ fun ProductCard(
                     modifier = Modifier.fillMaxWidth()
                 )
                 
+
+                Text(
+                    text = "Json 명함 제작",
+                    style = TextStyle(
+                        fontSize = 9.12.sp,
+                        lineHeight = 13.68.sp,
+                        fontFamily = DevFonts.KakaoBigSans,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF000000),
+                        )
+                )
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 Text(
-                    text = "${String.format("%,d", product.price)}원",
+                    text = "${product.price}원",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF1976D2)
