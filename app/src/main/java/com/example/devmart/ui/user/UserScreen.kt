@@ -18,7 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.devmart.R   // ✅ 네 앱 패키지의 R
+import com.example.devmart.R   // 앱 패키지의 R
 
 // 색상 정의
 private val Dark = Color(0xFF30343F)            // 본문 텍스트
