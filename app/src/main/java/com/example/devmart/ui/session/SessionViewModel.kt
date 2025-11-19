@@ -17,7 +17,7 @@ sealed interface AuthState {
 @HiltViewModel
 class SessionViewModel @Inject constructor(tokenStore: TokenStore) : ViewModel() {
     val auth: StateFlow<AuthState> = tokenStore.tokenFlow
-        .map<AuthState>{ t -> if (t.isNullOrBlank()) AuthState.Unauthenticated else AuthState.Authenticated(t) }
+        .map { t -> if (t.isNullOrBlank()) AuthState.Unauthenticated else AuthState.Authenticated(t) }
         .onStart { emit(AuthState.Loading) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, AuthState.Loading)
 }
