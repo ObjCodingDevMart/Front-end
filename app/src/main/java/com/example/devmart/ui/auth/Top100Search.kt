@@ -5,10 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -31,21 +29,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.devmart.ui.component.BottomNavigationBar
 import com.example.devmart.ui.component.BottomNavItem
-import com.example.devmart.ui.theme.DevBlack
-import com.example.devmart.ui.theme.DevDarkgray
-import com.example.devmart.ui.theme.DevDarkneyvy
-import com.example.devmart.ui.theme.DevFonts
-import com.example.devmart.ui.theme.DevGray
-import com.example.devmart.ui.theme.DevWhite
-import com.example.devmart.ui.theme.DevMartTheme   // <- 프로젝트 테마 이름 다르면 수정
+import com.example.devmart.ui.theme.*
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun <T> Top100SearchScreen(
-    products: List<T>,                     // Top100 상품 리스트
-    productCard: @Composable (T) -> Unit, // ProductCard를 그리는 람다
-    currentRoute: String,                 // 현재 선택된 탭 (예: "top100")
-    onBottomNavClick: (String) -> Unit,   // 하단바 탭 클릭 시 호출
+    products: List<T>,
+    productCard: @Composable (T) -> Unit,
+    currentRoute: String,
+    onBottomNavClick: (String) -> Unit,
+
+    // 동적 데이터로 변경됨
+    recentSearches: List<String>,
+    popularKeywords: List<String>,
+
     modifier: Modifier = Modifier,
     onCloseClick: () -> Unit = {},
     onSearchSubmit: (String) -> Unit = {},
@@ -53,18 +50,76 @@ fun <T> Top100SearchScreen(
 ) {
     var query by remember { mutableStateOf("") }
 
-    val recentSearches = listOf(
-        "GPT-5 초보자용 프롬프트 엔지니어링",
-        "카페인 3000배"
-    )
-
-    val popularKeywords = listOf(
-        "마우스", "키보드", "스피커", "손목 보호 패드", "모니터 암",
-        "키캡", "리무버블 스티커", "머그컵", "노트북 케이스", "후드티"
-    )
-
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        topBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(DevWhite)
+                    .padding(horizontal = 16.dp, vertical = 26.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(DevGray.copy(alpha = 0.4f))
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        modifier = Modifier.weight(1f),
+                        placeholder = {
+                            Text(
+                                text = "DevMart.search.IsTrue()",
+                                fontSize = 14.sp,
+                                color = DevDarkgray,
+                                fontFamily = DevFonts.KakaoBigSans
+                            )
+                        },
+                        textStyle = androidx.compose.ui.text.TextStyle(
+                            fontSize = 14.sp,
+                            color = DevBlack,
+                            fontFamily = DevFonts.KakaoBigSans
+                        ),
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            cursorColor = DevDarkneyvy,
+                            focusedTextColor = DevBlack,
+                            unfocusedTextColor = DevBlack,
+                            disabledTextColor = DevDarkgray
+                        )
+                    )
+
+                    IconButton(onClick = { onSearchSubmit(query) }) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "검색",
+                            tint = DevDarkneyvy
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                IconButton(onClick = onCloseClick) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "닫기",
+                        tint = DevDarkgray
+                    )
+                }
+            }
+        },
         bottomBar = {
             BottomNavigationBar(
                 currentRoute = currentRoute,
@@ -72,109 +127,32 @@ fun <T> Top100SearchScreen(
             )
         }
     ) { innerPadding ->
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
+
+        LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
                 .background(DevWhite),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = 24.dp,
-                bottom = 16.dp
-            )
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ───── 상단 검색 바 + X 버튼 ─────
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(DevGray.copy(alpha = 0.4f))
-                            .padding(horizontal = 12.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TextField(
-                            value = query,
-                            onValueChange = { query = it },
-                            modifier = Modifier.weight(1f),
-                            placeholder = {
-                                Text(
-                                    text = "DevMart.search.IsTrue()",
-                                    fontSize = 14.sp,
-                                    color = DevDarkgray,
-                                    fontFamily = DevFonts.KakaoBigSans
-                                )
-                            },
-                            textStyle = androidx.compose.ui.text.TextStyle(
-                                fontSize = 14.sp,
-                                color = DevBlack,
-                                fontFamily = DevFonts.KakaoBigSans
-                            ),
-                            singleLine = true,
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                disabledContainerColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                disabledIndicatorColor = Color.Transparent,
-                                cursorColor = DevDarkneyvy,
-                                focusedTextColor = DevBlack,
-                                unfocusedTextColor = DevBlack,
-                                disabledTextColor = DevDarkgray
-                            )
-                        )
 
-                        IconButton(onClick = { onSearchSubmit(query) }) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "검색",
-                                tint = DevDarkneyvy
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    IconButton(onClick = onCloseClick) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "닫기",
-                            tint = DevDarkgray
-                        )
-                    }
-                }
-            }
-
-            // ───── 최근 검색어 제목 ─────
-            item(span = { GridItemSpan(maxLineSpan) }) {
+            // ----- 최근 검색어 -----
+            item {
                 Text(
                     text = "최근 검색어",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = DevBlack,
-                    fontFamily = DevFonts.KakaoBigSans,
-                    modifier = Modifier.padding(top = 16.dp)
+                    fontFamily = DevFonts.KakaoBigSans
                 )
             }
 
-            // ───── 최근 검색어 리스트 ─────
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.padding(top = 4.dp)
-                ) {
-                    recentSearches.forEach { text ->
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    recentSearches.forEach {
                         Text(
-                            text = text,
+                            text = it,
                             fontSize = 13.sp,
                             color = DevBlack,
                             fontFamily = DevFonts.KakaoBigSans,
@@ -185,51 +163,56 @@ fun <T> Top100SearchScreen(
                 }
             }
 
-            // ───── 인기 키워드 제목 ─────
-            item(span = { GridItemSpan(maxLineSpan) }) {
+            // ----- 인기 키워드 -----
+            item {
                 Text(
                     text = "인기 키워드",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = DevBlack,
-                    fontFamily = DevFonts.KakaoBigSans,
-                    modifier = Modifier.padding(top = 20.dp, bottom = 8.dp)
+                    fontFamily = DevFonts.KakaoBigSans
                 )
             }
 
-            // ───── 키워드 칩들 ─────
-            item(span = { GridItemSpan(maxLineSpan) }) {
+            item {
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     popularKeywords.forEach { keyword ->
-                        KeywordChip(
-                            label = keyword,
-                            onClick = { onKeywordClick(keyword) }
-                        )
+                        KeywordChip(label = keyword, onClick = { onKeywordClick(keyword) })
                     }
                 }
             }
 
-            // ───── 인기 TOP 100 제목 ─────
-            item(span = { GridItemSpan(maxLineSpan) }) {
+            // ----- TOP 100 -----
+            item {
                 Text(
                     text = "인기 TOP 100",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = DevBlack,
-                    fontFamily = DevFonts.KakaoBigSans,
-                    modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
+                    fontFamily = DevFonts.KakaoBigSans
                 )
             }
 
-            // ───── 실제 상품 카드 그리드 ─────
-            items(products) { product ->
-                Box(
-                    modifier = Modifier.fillMaxWidth()
+            // ----- 3열 상품 카드 -----
+            val rows = products.chunked(3)
+            items(rows) { rowItems ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    productCard(product)
+                    rowItems.forEach { product ->
+                        Box(modifier = Modifier.weight(1f)) {
+                            productCard(product)
+                        }
+                    }
+                    if (rowItems.size < 3) {
+                        repeat(3 - rowItems.size) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
                 }
             }
         }
@@ -258,8 +241,6 @@ private fun KeywordChip(
     }
 }
 
-/* ----- Preview용 더미 카드 ----- */
-
 @Composable
 private fun DummyProductCard() {
     Column(
@@ -270,7 +251,7 @@ private fun DummyProductCard() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(1f)
+                .aspectRatio(1f) // 정사각형
                 .clip(RoundedCornerShape(8.dp))
                 .background(DevGray.copy(alpha = 0.6f))
         )
@@ -300,19 +281,19 @@ private fun DummyProductCard() {
     }
 }
 
-/* ----- 실제 Preview ----- */
-
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun Top100SearchScreenPreview() {
-    DevMartTheme {   // <- 이름 다르면 프로젝트 테마 이름으로 변경
-        val dummyProducts = List(9) { "dummy-$it" }
+    DevMartTheme {
+        val dummyProducts = List(12) { "dummy-$it" }
 
         Top100SearchScreen(
             products = dummyProducts,
             productCard = { DummyProductCard() },
             currentRoute = BottomNavItem.Top100.route,
-            onBottomNavClick = {}
+            onBottomNavClick = {},
+            recentSearches = listOf("AI", "Kotlin", "Compose"),
+            popularKeywords = listOf("키보드", "노트북", "의자", "마이크")
         )
     }
 }
