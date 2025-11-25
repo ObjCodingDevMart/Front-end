@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -117,7 +117,7 @@ fun CartScreen(
 
                 Spacer(Modifier.height(4.dp))
 
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier.fillMaxWidth(),
                     color = DevDarkneyvy.copy(alpha = 0.8f),
                     thickness = 1.dp
@@ -135,7 +135,7 @@ fun CartScreen(
 
                     if (index != state.items.lastIndex) {
                         Spacer(Modifier.height(12.dp))
-                        Divider(
+                        HorizontalDivider(
                             modifier = Modifier.fillMaxWidth(),
                             color = DevDarkgray.copy(alpha = 0.4f),
                             thickness = 1.dp
@@ -146,7 +146,7 @@ fun CartScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier.fillMaxWidth(),
                     color = DevDarkneyvy.copy(alpha = 0.8f),
                     thickness = 1.dp
@@ -211,7 +211,7 @@ private fun CartTopBar(
         }
 
         // 아래 구분선
-        Divider(
+        HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
             color = DevDarkgray.copy(alpha = 0.4f),
             thickness = 1.dp
@@ -413,7 +413,7 @@ private fun CartOrderInfoCard(
 
             Spacer(Modifier.height(8.dp))
 
-            Divider(
+            HorizontalDivider(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
