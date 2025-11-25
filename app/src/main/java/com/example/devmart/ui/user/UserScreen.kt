@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,14 +19,34 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.devmart.R   // 앱 패키지의 R
+import com.example.devmart.R
+import com.example.devmart.ui.component.BottomNavigationBar
+import com.example.devmart.ui.component.BottomNavItem   // ⭐ currentRoute 기본값에 사용
 
 // 색상 정의
-private val Dark = Color(0xFF30343F)            // 본문 텍스트
-private val HeaderIconColor = Color(0xFF1E2749) // 헤더 컴포넌트 색
-private val DividerGray = Color(0xFF898989).copy(alpha = 0.2f) // 연한 구분선
+private val Dark = Color(0xFF30343F)
+private val HeaderIconColor = Color(0xFF1E2749)
+private val DividerGray = Color(0xFF898989).copy(alpha = 0.2f)
+private val ScreenBackground = Color(0xFFFAFAFF)
 
-// -------------------- 메인 화면 --------------------
+// -------------------- State & Event 객체 --------------------
+
+data class UserUiState(
+    val nickname: String,
+    val emailLocal: String,
+    val emailDomain: String,
+    val point: Int,
+    val shippingCount: Int,
+    val likedCount: Int,
+)
+
+data class UserScreenActions(
+    val onEditProfile: () -> Unit,
+    val onBackClick: () -> Unit = {},
+    val onSearchClick: () -> Unit = {},
+)
+
+// -------------------- 외부에서 부르는 UserScreen (그대로 써도 됨) --------------------
 
 @Composable
 fun UserScreen(
@@ -35,139 +56,232 @@ fun UserScreen(
     point: Int,
     shippingCount: Int,
     likedCount: Int,
-    onEditProfile: () -> Unit,          // 회원 정보 수정 눌렀을 때 호출
-    onBackClick: () -> Unit = {},       // 필요하면 뒤로가기 네비게이션
-    onSearchClick: () -> Unit = {},     // 필요하면 검색
+    onEditProfile: () -> Unit,
+    onBackClick: () -> Unit = {},
+    onSearchClick: () -> Unit = {},
+    currentRoute: String = BottomNavItem.MyPage.route,          // ⭐ 기본값: MyPage
+    onBottomNavClick: (String) -> Unit = {}                     // ⭐ 클릭 시 동작
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFFAFAFF))
-    ) {
-        // 상태바 높이
-        Spacer(Modifier.height(44.dp))
+    val state = UserUiState(
+        nickname = nickname,
+        emailLocal = emailLocal,
+        emailDomain = emailDomain,
+        point = point,
+        shippingCount = shippingCount,
+        likedCount = likedCount
+    )
 
-        // 헤더 (← Dev Mart 🔍)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(38.dp)
-                .padding(horizontal = 20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // ←
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clickable { onBackClick() },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "←",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = HeaderIconColor
-                )
-            }
+    val actions = UserScreenActions(
+        onEditProfile = onEditProfile,
+        onBackClick = onBackClick,
+        onSearchClick = onSearchClick
+    )
 
-            Spacer(Modifier.width(10.dp))
+    UserScreen(
+        state = state,
+        actions = actions,
+        currentRoute = currentRoute,
+        onBottomNavClick = onBottomNavClick
+    )
+}
 
-            Text(
-                text = "Dev Mart",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = HeaderIconColor
+// -------------------- Scaffold 적용된 실제 화면 --------------------
+
+@Composable
+fun UserScreen(
+    state: UserUiState,
+    actions: UserScreenActions,
+    currentRoute: String,
+    onBottomNavClick: (String) -> Unit
+) {
+    Scaffold(
+        topBar = {
+            UserTopBar(
+                title = "Dev Mart",
+                onBackClick = actions.onBackClick,
+                onSearchClick = actions.onSearchClick
             )
-
-            Spacer(Modifier.weight(1f))
-
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clickable { onSearchClick() },
-                contentAlignment = Alignment.Center
-            ) {
-
-                Text(
-                    text = "돋보기",
-                    fontSize = 20.sp,
-                    color = HeaderIconColor
-                )
-            }
-        }
-
-        // 프로필 이미지
-        Spacer(Modifier.height(40.dp))
+        },
+        bottomBar = {
+            BottomNavigationBar(
+                currentRoute = currentRoute,
+                onItemClick = onBottomNavClick
+            )
+        },
+        containerColor = ScreenBackground
+    ) { innerPadding ->
 
         Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_profile_default),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(135.dp)
-                    .clip(CircleShape)
-            )
-        }
-
-        // 닉네임 (나중에 변경되면 여기 값만 바뀌도록)
-        Spacer(Modifier.height(20.dp))
-
-        Text(
-            text = "${nickname}님, 반가워요!",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Dark,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        // 이메일 (local + domain)
-        Row(
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
-            Text("$emailLocal@", fontSize = 14.sp, color = Color(0xFF898989))
-            Spacer(Modifier.width(4.dp))
-            Text(emailDomain, fontSize = 14.sp, color = Color(0xFF898989))
-        }
-
-        // 포인트 / 배송중 / 좋아요
-        Spacer(Modifier.height(32.dp))
-
-        Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .background(ScreenBackground)
+                .padding(innerPadding)
         ) {
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                UserInfoSmall("포인트", "${point}P")
-            }
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                UserInfoSmall("배송중", "$shippingCount")
-            }
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                UserInfoSmall("좋아요 한 상품", "$likedCount")
-            }
-        }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp)
+            ) {
+                Spacer(Modifier.height(24.dp))
 
-        // 메뉴
-        Spacer(Modifier.height(40.dp))
+                UserProfileSection(
+                    nickname = state.nickname,
+                    emailLocal = state.emailLocal,
+                    emailDomain = state.emailDomain
+                )
 
-        MenuItem("구매내역") { /* TODO: 네비게이션 */ }
-        MenuItem("장바구니") { /* TODO */ }
-        MenuItem("좋아요") { /* TODO */ }
-        MenuItem("회원 정보 수정") {
-            // ⭐ 여기서 회원정보 수정 화면으로 이동(or bottomSheet)
-            onEditProfile()
+                Spacer(Modifier.height(32.dp))
+
+                UserSummarySection(
+                    point = state.point,
+                    shippingCount = state.shippingCount,
+                    likedCount = state.likedCount
+                )
+
+                Spacer(Modifier.height(40.dp))
+
+                UserMenuSection(onEditProfile = actions.onEditProfile)
+
+                Spacer(Modifier.height(16.dp)) // bottomBar와 살짝 간격
+            }
         }
     }
 }
 
-// 작은 정보 박스
+// -------------------- 상단 헤더 --------------------
+
+@Composable
+private fun UserTopBar(
+    title: String,
+    onBackClick: () -> Unit,
+    onSearchClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .padding(horizontal = 20.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(38.dp)
+                .clickable { onBackClick() },
+            contentAlignment = Alignment.Center
+        ) {
+            Text("←", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = HeaderIconColor)
+        }
+
+        Spacer(Modifier.width(10.dp))
+
+        Text(
+            text = title,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = HeaderIconColor
+        )
+
+        Spacer(Modifier.weight(1f))
+
+        Box(
+            modifier = Modifier
+                .size(38.dp)
+                .clickable { onSearchClick() },
+            contentAlignment = Alignment.Center
+        ) {
+            Text("돋보기", fontSize = 20.sp, color = HeaderIconColor)
+        }
+    }
+}
+
+// -------------------- 프로필 섹션 --------------------
+
+@Composable
+private fun UserProfileSection(
+    nickname: String,
+    emailLocal: String,
+    emailDomain: String,
+) {
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_profile_default),
+            contentDescription = null,
+            modifier = Modifier
+                .size(135.dp)
+                .clip(CircleShape)
+        )
+    }
+
+    Spacer(Modifier.height(20.dp))
+
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "${nickname}님, 반가워요!",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Dark
+        )
+    }
+
+    Spacer(Modifier.height(8.dp))
+
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("$emailLocal@", fontSize = 14.sp, color = Color(0xFF898989))
+            Spacer(Modifier.width(4.dp))
+            Text(emailDomain, fontSize = 14.sp, color = Color(0xFF898989))
+        }
+    }
+}
+
+// -------------------- 요약 정보 --------------------
+
+@Composable
+private fun UserSummarySection(
+    point: Int,
+    shippingCount: Int,
+    likedCount: Int
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            UserInfoSmall("포인트", "${point}P")
+        }
+        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            UserInfoSmall("배송중", "$shippingCount")
+        }
+        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            UserInfoSmall("좋아요 한 상품", "$likedCount")
+        }
+    }
+}
+
+// -------------------- 메뉴 섹션 --------------------
+
+@Composable
+private fun UserMenuSection(
+    onEditProfile: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        MenuItem("구매내역") {}
+        MenuItem("장바구니") {}
+        MenuItem("좋아요") {}
+        MenuItem("회원 정보 수정") { onEditProfile() }
+    }
+}
+
+// 작은 정보 UI
 @Composable
 fun UserInfoSmall(title: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -176,7 +290,7 @@ fun UserInfoSmall(title: String, value: String) {
     }
 }
 
-// 메뉴 + 구분선 (항상 선 표시)
+// 메뉴 항목 UI
 @Composable
 fun MenuItem(
     text: String,
@@ -188,14 +302,9 @@ fun MenuItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onClick() }
-                .padding(horizontal = 20.dp)
+                .padding(vertical = 18.dp)
         ) {
-            Text(
-                text = text,
-                fontSize = 12.sp,
-                color = Dark,
-                modifier = Modifier.padding(vertical = 18.dp)
-            )
+            Text(text, fontSize = 12.sp, color = Dark)
         }
 
         Divider(
@@ -206,7 +315,6 @@ fun MenuItem(
     }
 }
 
-// Preview용 더미 데이터
 @Preview(showBackground = true)
 @Composable
 fun PreviewUserScreen() {
@@ -218,7 +326,8 @@ fun PreviewUserScreen() {
             point = 0,
             shippingCount = 0,
             likedCount = 0,
-            onEditProfile = {}
+            onEditProfile = {},
+            // 프리뷰에서는 기본값이라 currentRoute/onBottomNavClick 안 넘겨도 됨
         )
     }
 }
