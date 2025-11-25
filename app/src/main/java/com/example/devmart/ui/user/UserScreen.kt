@@ -5,7 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -13,21 +14,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Search
 import com.example.devmart.R
 import com.example.devmart.ui.component.BottomNavigationBar
-import com.example.devmart.ui.component.BottomNavItem   // ⭐ currentRoute 기본값에 사용
-
-// 색상 정의
-private val Dark = Color(0xFF30343F)
-private val HeaderIconColor = Color(0xFF1E2749)
-private val DividerGray = Color(0xFF898989).copy(alpha = 0.2f)
-private val ScreenBackground = Color(0xFFFAFAFF)
+import com.example.devmart.ui.component.BottomNavItem
+import com.example.devmart.ui.theme.DevBlack
+import com.example.devmart.ui.theme.DevDarkgray
+import com.example.devmart.ui.theme.DevDarkneyvy
+import com.example.devmart.ui.theme.DevGray
+import com.example.devmart.ui.theme.DevWhite
 
 // -------------------- State & Event 객체 --------------------
 
@@ -46,7 +48,7 @@ data class UserScreenActions(
     val onSearchClick: () -> Unit = {},
 )
 
-// -------------------- 외부에서 부르는 UserScreen (그대로 써도 됨) --------------------
+// -------------------- 외부에서 부르는 UserScreen --------------------
 
 @Composable
 fun UserScreen(
@@ -59,8 +61,8 @@ fun UserScreen(
     onEditProfile: () -> Unit,
     onBackClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
-    currentRoute: String = BottomNavItem.MyPage.route,          // ⭐ 기본값: MyPage
-    onBottomNavClick: (String) -> Unit = {}                     // ⭐ 클릭 시 동작
+    currentRoute: String = BottomNavItem.MyPage.route,
+    onBottomNavClick: (String) -> Unit = {}
 ) {
     val state = UserUiState(
         nickname = nickname,
@@ -108,13 +110,13 @@ fun UserScreen(
                 onItemClick = onBottomNavClick
             )
         },
-        containerColor = ScreenBackground
+        containerColor = DevWhite
     ) { innerPadding ->
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(ScreenBackground)
+                .background(DevWhite)
                 .padding(innerPadding)
         ) {
             Column(
@@ -142,7 +144,7 @@ fun UserScreen(
 
                 UserMenuSection(onEditProfile = actions.onEditProfile)
 
-                Spacer(Modifier.height(16.dp)) // bottomBar와 살짝 간격
+                Spacer(Modifier.height(16.dp)) // bottomBar와 간격
             }
         }
     }
@@ -156,40 +158,59 @@ private fun UserTopBar(
     onBackClick: () -> Unit,
     onSearchClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .padding(horizontal = 20.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Column(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Box(
+        // 🔹 상태창(배터리/와이파이 영역) 44dp 확보
+        Spacer(modifier = Modifier.height(44.dp))
+
+        Row(
             modifier = Modifier
-                .size(38.dp)
-                .clickable { onBackClick() },
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .height(56.dp)
+                .padding(horizontal = 20.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("←", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = HeaderIconColor)
-        }
+            // 뒤로가기 아이콘
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clickable { onBackClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "뒤로가기",
+                    tint = DevDarkneyvy,
+                    modifier = Modifier.size(26.dp)
+                )
+            }
 
-        Spacer(Modifier.width(10.dp))
+            Spacer(Modifier.width(10.dp))
 
-        Text(
-            text = title,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = HeaderIconColor
-        )
+            Text(
+                text = title,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = DevDarkneyvy
+            )
 
-        Spacer(Modifier.weight(1f))
+            Spacer(Modifier.weight(1f))
 
-        Box(
-            modifier = Modifier
-                .size(38.dp)
-                .clickable { onSearchClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            Text("돋보기", fontSize = 20.sp, color = HeaderIconColor)
+            // 검색 아이콘
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clickable { onSearchClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Search,
+                    contentDescription = "검색",
+                    tint = DevDarkneyvy,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }
@@ -225,7 +246,7 @@ private fun UserProfileSection(
             text = "${nickname}님, 반가워요!",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = Dark
+            color = DevBlack
         )
     }
 
@@ -236,9 +257,9 @@ private fun UserProfileSection(
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("$emailLocal@", fontSize = 14.sp, color = Color(0xFF898989))
+            Text("$emailLocal@", fontSize = 14.sp, color = DevGray)
             Spacer(Modifier.width(4.dp))
-            Text(emailDomain, fontSize = 14.sp, color = Color(0xFF898989))
+            Text(emailDomain, fontSize = 14.sp, color = DevGray)
         }
     }
 }
@@ -285,8 +306,16 @@ private fun UserMenuSection(
 @Composable
 fun UserInfoSmall(title: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(title, fontSize = 12.sp, color = Dark.copy(alpha = 0.7f))
-        Text(value, fontSize = 14.sp, color = Dark)
+        Text(
+            title,
+            fontSize = 12.sp,
+            color = DevDarkgray.copy(alpha = 0.7f)
+        )
+        Text(
+            value,
+            fontSize = 14.sp,
+            color = DevBlack
+        )
     }
 }
 
@@ -304,12 +333,12 @@ fun MenuItem(
                 .clickable { onClick() }
                 .padding(vertical = 18.dp)
         ) {
-            Text(text, fontSize = 12.sp, color = Dark)
+            Text(text, fontSize = 12.sp, color = DevBlack)
         }
 
-        Divider(
+        HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
-            color = DividerGray,
+            color = DevGray.copy(alpha = 0.2f),
             thickness = 1.dp
         )
     }
@@ -327,7 +356,6 @@ fun PreviewUserScreen() {
             shippingCount = 0,
             likedCount = 0,
             onEditProfile = {},
-            // 프리뷰에서는 기본값이라 currentRoute/onBottomNavClick 안 넘겨도 됨
         )
     }
 }
