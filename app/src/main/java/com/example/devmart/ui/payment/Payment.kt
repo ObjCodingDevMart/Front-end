@@ -56,36 +56,20 @@ data class Address(
 
 @Composable
 fun PaymentScreen(
-    modifier: Modifier = Modifier
+    viewModel: PaymentViewModel = hiltViewModel()
 ) {
-    // 더미 주소
-    var address by remember {
-        mutableStateOf(
-            Address(
-                roadAddress = "서울특별시 강남구 테헤란로 123",
-                jibunAddress = "강남구 123-456",
-                postalCode = "06234",
-                detail = "101동 1001호"
-            )
-        )
+    val addressState by viewModel.address.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadMyAddress()
     }
 
-    // 더미 상품 데이터
+    val address = addressState ?: Address()
+
+    // 더미 상품
     val products = listOf(
-        OrderProduct(
-            id = "1",
-            name = "게이밍 키보드",
-            detail = "청축 스위치 / RGB",
-            price = 99000,
-            qty = 1
-        ),
-        OrderProduct(
-            id = "2",
-            name = "게이밍 마우스",
-            detail = "16000 DPI / 블랙",
-            price = 59000,
-            qty = 2
-        )
+        OrderProduct("1", "게이밍 키보드", "청축 스위치 / RGB", 99000, 1),
+        OrderProduct("2", "게이밍 마우스", "16000 DPI / 블랙", 59000, 2)
     )
 
     val totalPrice = products.sumOf { it.price * it.qty }
@@ -93,27 +77,25 @@ fun PaymentScreen(
     val finalAmount = totalPrice + deliveryFee
 
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
 
-        Text(text = "결제하기", style = MaterialTheme.typography.headlineSmall)
+        Text("결제하기", style = MaterialTheme.typography.headlineSmall)
         Spacer(modifier = Modifier.height(16.dp))
 
         // ------------------ 배송 정보 ------------------
         DeliveryInfoBox(
             address = address,
             onClickSearchPostal = {
-                // 네비게이션으로 주소검색 화면 이동
+                // 💡 여기에서 카카오 주소검색 화면으로 이동해야 함
                 // navController.navigate("addressSearch")
             },
-            onClickSave = { newAddress ->
-                address = newAddress
+            onClickSave = {
+                viewModel.updateMyAddress(it)
             }
         )
-
-
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -123,18 +105,12 @@ fun PaymentScreen(
                 .fillMaxWidth()
                 .weight(1f)
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize()
-            ) {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(products) { product ->
-                    OrderItemCard(
-                        product = product,
-                        mode = OrderItemMode.ReadOnly
-                    )
+                    OrderItemCard(product = product, mode = OrderItemMode.ReadOnly)
                 }
             }
         }
-
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -149,9 +125,7 @@ fun PaymentScreen(
 
         // ------------------ 결제 버튼 ------------------
         Button(
-            onClick = {
-                // TODO: 결제 API 연동 예정
-            },
+            onClick = { /* TODO: 결제 API 연동 */ },
             colors = ButtonDefaults.buttonColors(
                 containerColor = DevDarkneyvy,
                 contentColor = DevWhite
@@ -161,7 +135,7 @@ fun PaymentScreen(
                 .height(55.dp),
             shape = RoundedCornerShape(14.dp)
         ) {
-            Text(text = "${finalAmount}원 결제하기")
+            Text("${finalAmount}원 결제하기")
         }
     }
 }
