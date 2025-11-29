@@ -10,6 +10,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.*
 import com.example.devmart.ui.auth.LoginScreen
 import com.example.devmart.ui.home.HomeScreen
+import com.example.devmart.ui.home.ProductDetailScreen
 import com.example.devmart.ui.session.AuthState
 import com.example.devmart.ui.session.SessionViewModel
 
@@ -58,20 +59,15 @@ fun AppNav() {
                     }
                 ) 
             }
-            composable(Route.Detail.path) { back ->
-                val id = back.arguments?.getString("id").orEmpty()
-                HomeScreen(
-                    detailId = id,
-                    onNavigateToRoute = { route -> 
-                        when (route) {
-                            "home" -> nav.navigate(Route.Home.path) { 
-                                popUpTo(Route.MainGraph.path) { inclusive = false }
-                            }
-                            "top100" -> { /* TODO */ }
-                            "order" -> { /* TODO */ }
-                            "login" -> { /* TODO */ }
-                        }
-                    }
+            composable(Route.Detail.path) { backStackEntry ->
+                val id = backStackEntry.arguments?.getString("id").orEmpty()
+                ProductDetailScreen(
+                    product = null, // TODO: Repository에서 id로 상품 정보 가져오기
+                    onBackClick = { nav.popBackStack() },
+                    onSearchClick = { /* TODO: 검색 화면으로 이동 */ },
+                    onLikeClick = { /* TODO: 좋아요 기능 구현 */ },
+                    onAddToCart = { /* TODO: 장바구니 추가 기능 구현 */ },
+                    onBuyNow = { /* TODO: 바로 구매 기능 구현 */ }
                 )
             }
         }

@@ -31,6 +31,20 @@ android {
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
 }
 
+// AndroidTest 빌드 타입에서 KAPT 태스크 비활성화 (Hilt를 사용하지 않으므로)
+afterEvaluate {
+    tasks.findByName("kaptDebugAndroidTestKotlin")?.apply {
+        enabled = false
+    }
+    tasks.findByName("kaptReleaseAndroidTestKotlin")?.apply {
+        enabled = false
+    }
+    // 모든 AndroidTest 관련 kapt 태스크 비활성화
+    tasks.matching { it.name.startsWith("kapt") && it.name.contains("AndroidTest") }.configureEach {
+        enabled = false
+    }
+}
+
 dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
@@ -61,4 +75,9 @@ dependencies {
     
     // Coil for image loading
     implementation(libs.coil.compose)
+    
+    // AndroidTest dependencies
+    androidTestImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }
