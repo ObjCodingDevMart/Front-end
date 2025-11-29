@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
@@ -25,19 +23,21 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Devices
 import com.example.devmart.R
 import com.example.devmart.domain.model.Product
 import com.example.devmart.domain.model.Review
@@ -63,7 +63,7 @@ fun ProductDetailScreen(
     )
     
     var isLiked by remember { mutableStateOf(false) }
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(0) }
     
     val tabs = listOf("상품 상세", "구매 안내", "리뷰")
     
@@ -77,7 +77,7 @@ fun ProductDetailScreen(
                     ) {
                         IconButton(onClick = onBackClick) {
                             Icon(
-                                imageVector = Icons.Default.ArrowBack,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "뒤로가기",
                                 tint = DevBlack
                             )
@@ -218,7 +218,7 @@ fun ProductInfoSection(
         
         // 가격
         Text(
-            text = "${String.format("%,d", product.price)}원",
+            text = "${product.price}원",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = DevNeyvy,
@@ -299,7 +299,7 @@ fun TabSection(
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
-    var rowWidth by remember { mutableStateOf(0f) }
+    var rowWidth by remember { mutableFloatStateOf(0f) }
     
     Column(modifier = modifier) {
         Row(
@@ -410,7 +410,6 @@ fun ProductDetailContent(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .verticalScroll(scrollState)
     ) {
         // 상품 상세 이미지 영역 (img.png)
         Box(
@@ -489,12 +488,9 @@ fun ProductDetailInfo(
 fun PurchaseGuideContent(
     modifier: Modifier = Modifier
 ) {
-    val scrollState = rememberScrollState()
-    
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
         Text(
@@ -658,11 +654,11 @@ fun ReviewSection(
         Spacer(modifier = Modifier.height(16.dp))
         
         // 리뷰 목록
-        LazyColumn(
+        Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(reviews) { review ->
+            reviews.forEach { review ->
                 ReviewItem(
                     review = review,
                     modifier = Modifier.fillMaxWidth()
@@ -690,7 +686,7 @@ fun ReviewHeader(
         ) {
             // 평균 별점
             Text(
-                text = String.format("%.1f", averageRating),
+                text = String.format("%.2f",averageRating),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = DevNeyvy
@@ -900,6 +896,7 @@ fun BottomActionBar(
 
 /* ===================== PREVIEW ===================== */
 @Preview(name = "Product Detail 360x800", widthDp = 360, heightDp = 800, showBackground = true)
+@Preview(name = "Pixel 7a", device = Devices.PIXEL_7A, showBackground = true)
 @Composable
 private fun PreviewProductDetail() {
     DevMartTheme {
