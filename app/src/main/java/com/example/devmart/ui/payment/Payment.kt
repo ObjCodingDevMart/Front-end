@@ -21,6 +21,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.devmart.ui.component.OrderItemCard
 import com.example.devmart.ui.component.OrderItemMode
 import com.example.devmart.ui.theme.DevDarkneyvy
@@ -56,7 +59,8 @@ data class Address(
 
 @Composable
 fun PaymentScreen(
-    viewModel: PaymentViewModel = hiltViewModel()
+    viewModel: PaymentViewModel = hiltViewModel(),
+    onNavigateToAddressSearch: () -> Unit
 ) {
     val addressState by viewModel.address.collectAsState()
 
@@ -88,10 +92,7 @@ fun PaymentScreen(
         // ------------------ 배송 정보 ------------------
         DeliveryInfoBox(
             address = address,
-            onClickSearchPostal = {
-                // 💡 여기에서 카카오 주소검색 화면으로 이동해야 함
-                // navController.navigate("addressSearch")
-            },
+            onClickSearchPostal = onNavigateToAddressSearch,
             onClickSave = {
                 viewModel.updateMyAddress(it)
             }
@@ -284,5 +285,7 @@ fun PriceRow(
 @Preview(showBackground = true)
 @Composable
 fun PreviewPaymentScreen() {
-    PaymentScreen()
+    PaymentScreen(
+        onNavigateToAddressSearch = {}
+    )
 }
