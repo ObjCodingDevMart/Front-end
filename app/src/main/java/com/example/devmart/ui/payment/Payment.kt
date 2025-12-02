@@ -22,7 +22,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,10 +31,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.devmart.ui.component.OrderItemCard
 import com.example.devmart.ui.component.OrderItemMode
 import com.example.devmart.ui.theme.DevDarkneyvy
+import com.example.devmart.ui.theme.DevMartTheme
 import com.example.devmart.ui.theme.DevWhite
 
 // ----------------------- 데이터 클래스 -----------------------
@@ -59,25 +58,14 @@ data class Address(
 
 @Composable
 fun PaymentScreen(
-    viewModel: PaymentViewModel = hiltViewModel(),
-    onNavigateToAddressSearch: () -> Unit
+    address: Address = Address(),
+    products: List<OrderProduct> = emptyList(),
+    onNavigateToAddressSearch: () -> Unit = {},
+    onSaveAddress: (Address) -> Unit = {},
+    onClickPayment: () -> Unit = {}
 ) {
-    val addressState by viewModel.address.collectAsState()
-
-    LaunchedEffect(Unit) {
-        viewModel.loadMyAddress()
-    }
-
-    val address = addressState ?: Address()
-
-    // 더미 상품
-    val products = listOf(
-        OrderProduct("1", "게이밍 키보드", "청축 스위치 / RGB", 99000, 1),
-        OrderProduct("2", "게이밍 마우스", "16000 DPI / 블랙", 59000, 2)
-    )
-
     val totalPrice = products.sumOf { it.price * it.qty }
-    val deliveryFee = 3000
+    val deliveryFee = if (products.isEmpty()) 0 else 3000
     val finalAmount = totalPrice + deliveryFee
 
     Column(
@@ -93,9 +81,7 @@ fun PaymentScreen(
         DeliveryInfoBox(
             address = address,
             onClickSearchPostal = onNavigateToAddressSearch,
-            onClickSave = {
-                viewModel.updateMyAddress(it)
-            }
+            onClickSave = onSaveAddress
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -126,7 +112,7 @@ fun PaymentScreen(
 
         // ------------------ 결제 버튼 ------------------
         Button(
-            onClick = { /* TODO: 결제 API 연동 */ },
+            onClick = onClickPayment,
             colors = ButtonDefaults.buttonColors(
                 containerColor = DevDarkneyvy,
                 contentColor = DevWhite
@@ -153,6 +139,12 @@ fun DeliveryInfoBox(
     var road by remember { mutableStateOf(address.roadAddress) }
     var detail by remember { mutableStateOf(address.detail) }
 
+    // 외부에서 address가 변경되면 내부 상태도 동기화
+    LaunchedEffect(address.postalCode, address.roadAddress) {
+        postal = address.postalCode
+        road = address.roadAddress
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -173,9 +165,10 @@ fun DeliveryInfoBox(
         ) {
             OutlinedTextField(
                 value = postal,
-                onValueChange = { postal = it },
+                onValueChange = { /* 읽기 전용 - 우편번호 검색으로만 입력 */ },
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("우편번호") }
+                placeholder = { Text("우편번호") },
+                readOnly = true
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -285,7 +278,17 @@ fun PriceRow(
 @Preview(showBackground = true)
 @Composable
 fun PreviewPaymentScreen() {
-    PaymentScreen(
-        onNavigateToAddressSearch = {}
-    )
+    DevMartTheme {
+        PaymentScreen(
+            address = Address(
+                postalCode = "12345",
+                roadAddress = "서울시 강남구 테헤란로 123",
+                detail = "101동 1001호"
+            ),
+            products = listOf(
+                OrderProduct("1", "게이밍 키보드", "청축 스위치 / RGB", 99000, 1),
+                OrderProduct("2", "게이밍 마우스", "16000 DPI / 블랙", 59000, 2)
+            )
+        )
+    }
 }
