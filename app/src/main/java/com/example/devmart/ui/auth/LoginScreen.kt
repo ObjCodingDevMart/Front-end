@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -29,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -43,6 +45,7 @@ import com.example.devmart.ui.theme.BUTTON_TOP
 import com.example.devmart.ui.theme.DevBlack
 import com.example.devmart.ui.theme.DevDarkgray
 import com.example.devmart.ui.theme.DevDarkneyvy
+import com.example.devmart.ui.theme.DevFonts.KakaoBigSans
 import com.example.devmart.ui.theme.DevGray
 import com.example.devmart.ui.theme.DevMartTheme
 import com.example.devmart.ui.theme.DevNeyvy
@@ -99,7 +102,7 @@ fun LoginScreen(
                     .background(DevWhite),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Dev Mart", color = DevDarkneyvy, fontWeight = FontWeight.SemiBold, fontSize = 30.sp)
+                Text("Dev Mart", color = DevDarkneyvy, fontFamily = KakaoBigSans, fontWeight = FontWeight.Bold, fontSize = 24.sp)
             }
 
             Spacer(Modifier.height(TITLE_TOP))
@@ -148,7 +151,7 @@ fun LoginScreen(
                     disabledContentColor = DevNeyvy.copy(alpha = 0.8f)
                 ),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
-            ) { Text("로그인") }
+            ) { Text("로그인", fontFamily = KakaoBigSans, fontWeight = FontWeight.Normal) }
 
             // 로그인 아래 중앙 분기: 아이디 찾기 | 비밀번호 찾기
             Spacer(Modifier.height(12.dp))
@@ -184,7 +187,7 @@ fun LoginScreen(
                             .background(KakaoBlack, CircleShape)
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("Kakao 로그인", color = KakaoBlack, fontWeight = FontWeight.SemiBold)
+                    Text("Kakao 로그인", color = KakaoBlack, fontFamily = KakaoBigSans, fontWeight = FontWeight.Normal)
                 }
             }
 
@@ -205,7 +208,8 @@ fun LoginScreen(
                 text = "회원가입하기",
                 color = DevDarkneyvy,
                 fontSize = FOOTER_SIZE,
-                fontWeight = FontWeight.SemiBold,
+                fontFamily = KakaoBigSans,
+                fontWeight = FontWeight.Normal,
                 modifier = Modifier
                     .clickable(onClick = onSignUp)
                     .padding(bottom = 16.dp)
@@ -220,20 +224,25 @@ private fun UnderlineField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
+    modifier: Modifier = Modifier,
     isPassword: Boolean = false,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    modifier: Modifier = Modifier
-        .fillMaxWidth()
-        .height(FIELD_HEIGHT)
+    onImeAction: (() -> Unit)? = null
 ) {
+    val visual = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None
     TextField(
         value = value,
         onValueChange = onValueChange,
         singleLine = true,
-        placeholder = { Text(placeholder, color = DevDarkgray) },
-        visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
-        keyboardOptions = keyboardOptions,
-        modifier = modifier,
+        placeholder = { Text(placeholder) },
+        visualTransformation = visual,
+        keyboardOptions = keyboardOptions.copy(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(
+            onDone = { onImeAction?.invoke()}
+        ),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(FIELD_HEIGHT),
         shape = RoundedCornerShape(0.dp),
         colors = TextFieldDefaults.colors(
             // 배경 투명 + 밑줄만 사용
@@ -242,7 +251,7 @@ private fun UnderlineField(
             disabledContainerColor = Color.Transparent,
             errorContainerColor = Color.Transparent,
             focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-            unfocusedIndicatorColor = Color(0xFFCBD5E1), // 연한 회색 밑줄
+            unfocusedIndicatorColor = DevGray, // 연한 회색 밑줄
             errorIndicatorColor = MaterialTheme.colorScheme.error,
             cursorColor = MaterialTheme.colorScheme.primary,
             focusedPlaceholderColor = DevDarkgray,
@@ -257,6 +266,8 @@ private fun MetaLink(text: String, onClick: () -> Unit) {
     Text(
         text = text,
         color = DevGray,
+        fontFamily = KakaoBigSans,
+        fontWeight = FontWeight.Normal,
         fontSize = META_SIZE,
         modifier = Modifier
             .clickable(onClick = onClick)
