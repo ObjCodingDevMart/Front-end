@@ -1,6 +1,7 @@
 package com.example.devmart
 
 sealed class Route(val path: String) {
+    data object Splash : Route("splash")
     data object AuthGraph : Route("auth")
     data object MainGraph : Route("main")
     data object Login : Route("login")
