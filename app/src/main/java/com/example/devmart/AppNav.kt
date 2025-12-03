@@ -1,18 +1,32 @@
 package com.example.devmart
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.*
+import com.example.devmart.domain.model.Product
 import com.example.devmart.ui.auth.LoginScreen
+import com.example.devmart.ui.auth.SplashScreen
+import com.example.devmart.ui.auth.Top100SearchScreen
+import com.example.devmart.ui.cart.CartScreen
+import com.example.devmart.ui.cart.CartScreenState
+import com.example.devmart.ui.cart.CartScreenActions
+import com.example.devmart.ui.cart.CartPriceSummaryUiState
+import com.example.devmart.ui.cart.CartOrderInfoUiState
+import com.example.devmart.ui.component.ProductCard
 import com.example.devmart.ui.home.HomeScreen
 import com.example.devmart.ui.home.ProductDetailScreen
 import com.example.devmart.ui.session.AuthState
 import com.example.devmart.ui.session.SessionViewModel
+import com.example.devmart.ui.payment.PaymentScreen
+import com.example.devmart.ui.payment.PaymentViewModel
+import com.example.devmart.ui.payment.AddressSearchScreen
+import com.example.devmart.ui.payment.AddressSearchViewModel
+import com.example.devmart.ui.payment.OrderProduct
+import com.example.devmart.ui.order.OrderHistoryScreen
+import com.example.devmart.ui.order.OrderHistoryUiState
+import com.example.devmart.ui.order.OrderGroupUi
+import com.example.devmart.ui.order.OrderSummaryUi
+import com.example.devmart.ui.user.UserScreen
 
 @Composable
 fun AppNav() {
@@ -20,27 +34,47 @@ fun AppNav() {
     val session: SessionViewModel = hiltViewModel()
     val auth by session.auth.collectAsState()
 
-    LaunchedEffect(auth) {
-        when (auth) {
-            is AuthState.Authenticated ->
-                nav.navigate(Route.MainGraph.path) { popUpTo(0) { inclusive = true } }
-            AuthState.Unauthenticated ->
-                nav.navigate(Route.AuthGraph.path) { popUpTo(0) { inclusive = true } }
-            AuthState.Loading -> Unit
-        }
-    }
-
-    if (auth is AuthState.Loading) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        return
-    }
-
     NavHost(
         navController = nav,
-        startDestination = if (auth is AuthState.Authenticated) Route.MainGraph.path else Route.AuthGraph.path
+        startDestination = Route.Splash.path
     ) {
+        // 스플래시 화면
+        composable(Route.Splash.path) {
+            SplashScreen(
+                onTimeout = {
+                    // 2초 후 인증 상태에 따라 이동
+                    when (auth) {
+                        is AuthState.Authenticated ->
+                            nav.navigate(Route.MainGraph.path) { popUpTo(0) { inclusive = true } }
+                        else ->
+                            nav.navigate(Route.AuthGraph.path) { popUpTo(0) { inclusive = true } }
+                    }
+                }
+            )
+        }
+
+        // 인증 그래프
         navigation(startDestination = Route.Login.path, route = Route.AuthGraph.path) {
-            composable(Route.Login.path) { LoginScreen() }
+            composable(Route.Login.path) {
+                // 로그인 상태 관찰 - 인증되면 MainGraph로 이동
+                LaunchedEffect(auth) {
+                    if (auth is AuthState.Authenticated) {
+                        nav.navigate(Route.MainGraph.path) { 
+                            popUpTo(Route.AuthGraph.path) { inclusive = true } 
+                        }
+                    }
+                }
+                
+                LoginScreen(
+                    onClickKakao = {
+                        // TODO: 카카오 로그인 구현
+                        // 테스트용: 바로 HomeScreen으로 이동
+                        nav.navigate(Route.MainGraph.path) {
+                            popUpTo(Route.AuthGraph.path) { inclusive = true }
+                        }
+                    }
+                )
+            }
         }
         navigation(startDestination = Route.Home.path, route = Route.MainGraph.path) {
             composable(Route.Home.path) { 
@@ -49,25 +83,301 @@ fun AppNav() {
                     onNavigateToRoute = { route -> 
                         // 하단 네비게이션 바 라우팅 처리
                         when (route) {
-                            "home" -> nav.navigate(Route.Home.path) { 
+                            "home" -> { /* 현재 화면 */ }
+                            "top100" -> nav.navigate(Route.Top100.path) {
                                 popUpTo(Route.MainGraph.path) { inclusive = false }
+                                launchSingleTop = true
                             }
-                            "top100" -> { /* TODO: TOP 100 화면으로 이동 */ }
-                            "order" -> { /* TODO: ORDER 화면으로 이동 */ }
-                            "login" -> { /* TODO: 로그인 화면으로 이동 */ }
+                            "order" -> nav.navigate(Route.Cart.path) {
+                                popUpTo(Route.MainGraph.path) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                            "MyPage" -> nav.navigate(Route.MyPage.path) {
+                                popUpTo(Route.MainGraph.path) { inclusive = false }
+                                launchSingleTop = true
+                            }
                         }
                     }
                 ) 
             }
             composable(Route.Detail.path) { backStackEntry ->
+                // TODO: id로 상품 정보 가져오기
+                @Suppress("UNUSED_VARIABLE")
                 val id = backStackEntry.arguments?.getString("id").orEmpty()
                 ProductDetailScreen(
-                    product = null, // TODO: Repository에서 id로 상품 정보 가져오기
+                    product = null,
                     onBackClick = { nav.popBackStack() },
                     onSearchClick = { /* TODO: 검색 화면으로 이동 */ },
                     onLikeClick = { /* TODO: 좋아요 기능 구현 */ },
                     onAddToCart = { /* TODO: 장바구니 추가 기능 구현 */ },
                     onBuyNow = { /* TODO: 바로 구매 기능 구현 */ }
+                )
+            }
+            composable(Route.Payment.path) { backStackEntry ->
+                val paymentViewModel: PaymentViewModel = hiltViewModel()
+                val addressState by paymentViewModel.address.collectAsState()
+                
+                LaunchedEffect(Unit) {
+                    paymentViewModel.loadMyAddress()
+                }
+                
+                // 주소 검색 화면에서 선택한 주소 받기
+                val savedStateHandle = backStackEntry.savedStateHandle
+                val selectedRoadAddress = savedStateHandle.get<String>("selectedRoadAddress")
+                val selectedPostalCode = savedStateHandle.get<String>("selectedPostalCode")
+                val selectedJibunAddress = savedStateHandle.get<String>("selectedJibunAddress")
+                
+                LaunchedEffect(selectedRoadAddress, selectedPostalCode) {
+                    if (!selectedRoadAddress.isNullOrEmpty() && !selectedPostalCode.isNullOrEmpty()) {
+                        paymentViewModel.setSelectedAddress(
+                            com.example.devmart.ui.payment.Address(
+                                roadAddress = selectedRoadAddress,
+                                postalCode = selectedPostalCode,
+                                jibunAddress = selectedJibunAddress ?: ""
+                            )
+                        )
+                        // 사용 후 초기화
+                        savedStateHandle.remove<String>("selectedRoadAddress")
+                        savedStateHandle.remove<String>("selectedPostalCode")
+                        savedStateHandle.remove<String>("selectedJibunAddress")
+                    }
+                }
+                
+                // 더미 상품 (나중에 장바구니에서 전달받도록 수정)
+                val products = listOf(
+                    OrderProduct("1", "게이밍 키보드", "청축 스위치 / RGB", 99000, 1),
+                    OrderProduct("2", "게이밍 마우스", "16000 DPI / 블랙", 59000, 2)
+                )
+                
+                PaymentScreen(
+                    address = addressState ?: com.example.devmart.ui.payment.Address(),
+                    products = products,
+                    onBackClick = { 
+                        val popped = nav.popBackStack()
+                        if (!popped) {
+                            // 백스택이 비어있으면 Cart로 이동
+                            nav.navigate(Route.Cart.path) {
+                                popUpTo(Route.MainGraph.path) { inclusive = false }
+                            }
+                        }
+                    },
+                    onNavigateToAddressSearch = {
+                        nav.navigate(Route.AddressSearch.path)
+                    },
+                    onSaveAddress = { address ->
+                        paymentViewModel.updateMyAddress(address)
+                    },
+                    onClickPayment = {
+                        // TODO: 결제 처리
+                    }
+                )
+            }
+            composable(Route.AddressSearch.path) {
+                val addressSearchViewModel: AddressSearchViewModel = hiltViewModel()
+                
+                AddressSearchScreen(
+                    keyword = addressSearchViewModel.keyword,
+                    results = addressSearchViewModel.results,
+                    onKeywordChange = { addressSearchViewModel.updateKeyword(it) },
+                    onSearch = { addressSearchViewModel.search() },
+                    onSelect = { address ->
+                        // 개별 필드로 저장 (Parcelable 없이 전달)
+                        nav.previousBackStackEntry?.savedStateHandle?.apply {
+                            set("selectedRoadAddress", address.roadAddress)
+                            set("selectedPostalCode", address.postalCode)
+                            set("selectedJibunAddress", address.jibunAddress)
+                        }
+                        nav.popBackStack()
+                    },
+                    onBack = { nav.popBackStack() }
+                )
+            }
+            
+            // Top100 검색 화면
+            composable(Route.Top100.path) {
+                // 더미 상품 데이터
+                val dummyProducts = List(12) { index ->
+                    Product(
+                        id = "product-$index",
+                        brand = "Brand",
+                        title = "상품 $index",
+                        price = 60000L,
+                        imageUrl = null
+                    )
+                }
+                
+                Top100SearchScreen(
+                    products = dummyProducts,
+                    productCard = { product ->
+                        ProductCard(
+                            product = product,
+                            onClick = { nav.navigate(Route.Detail.withId(product.id)) }
+                        )
+                    },
+                    currentRoute = "top100",
+                    onBottomNavClick = { route ->
+                        when (route) {
+                            "home" -> nav.navigate(Route.Home.path) {
+                                popUpTo(Route.MainGraph.path) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                            "top100" -> { /* 현재 화면 */ }
+                            "order" -> nav.navigate(Route.Cart.path) {
+                                popUpTo(Route.MainGraph.path) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                            "MyPage" -> nav.navigate(Route.MyPage.path) {
+                                popUpTo(Route.MainGraph.path) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        }
+                    },
+                    recentSearches = listOf("키보드", "마우스", "모니터"),
+                    popularKeywords = listOf("기계식 키보드", "게이밍 마우스", "무선 이어폰", "노트북 거치대"),
+                    onSearchSubmit = { /* TODO: 검색 처리 */ },
+                    onKeywordClick = { /* TODO: 키워드 검색 처리 */ }
+                )
+            }
+            
+            // 장바구니 화면
+            composable(Route.Cart.path) {
+                val dummyCartState = CartScreenState(
+                    products = listOf(
+                        OrderProduct("1", "게이밍 키보드", "청축 / RGB", 99000, 1),
+                        OrderProduct("2", "게이밍 마우스", "16000 DPI / 블랙", 59000, 2)
+                    ),
+                    priceSummary = CartPriceSummaryUiState(
+                        productAmountText = "217,000원",
+                        shippingFeeText = "3,000원",
+                        orderAmountText = "220,000원"
+                    ),
+                    orderInfo = CartOrderInfoUiState(
+                        totalQuantityText = "3개",
+                        totalProductAmountText = "217,000원",
+                        totalShippingFeeText = "3,000원"
+                    )
+                )
+                
+                CartScreen(
+                    state = dummyCartState,
+                    actions = CartScreenActions(
+                        onBackClick = { 
+                            val popped = nav.popBackStack()
+                            if (!popped) {
+                                nav.navigate(Route.Home.path) {
+                                    popUpTo(Route.MainGraph.path) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            }
+                        },
+                        onBottomNavClick = { route ->
+                            when (route) {
+                                "home" -> nav.navigate(Route.Home.path) {
+                                    popUpTo(Route.MainGraph.path) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                                "top100" -> nav.navigate(Route.Top100.path) {
+                                    popUpTo(Route.MainGraph.path) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                                "order" -> { /* 현재 화면 */ }
+                                "MyPage" -> nav.navigate(Route.MyPage.path) {
+                                    popUpTo(Route.MainGraph.path) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            }
+                        },
+                        onProductIncrement = { /* TODO: 수량 증가 */ },
+                        onProductDecrement = { /* TODO: 수량 감소 */ },
+                        onProductRemove = { /* TODO: 아이템 삭제 */ },
+                        onClickPayment = { nav.navigate(Route.Payment.path) }
+                    ),
+                    currentRoute = "order"
+                )
+            }
+            
+            // 마이페이지 화면
+            composable(Route.MyPage.path) {
+                UserScreen(
+                    nickname = "사용자",
+                    emailLocal = "user",
+                    emailDomain = "devmart.com",
+                    point = 1000,
+                    shippingCount = 2,
+                    likedCount = 5,
+                    onEditProfile = { /* TODO: 프로필 수정 */ },
+                    onBackClick = { nav.navigate(Route.Home.path) {
+                        popUpTo(Route.MainGraph.path) { inclusive = false }
+                        launchSingleTop = true
+                    }},
+                    onOrderHistoryClick = { nav.navigate(Route.OrderHistory.path) },
+                    onCartClick = { nav.navigate(Route.Cart.path) {
+                        popUpTo(Route.MainGraph.path) { inclusive = false }
+                        launchSingleTop = true
+                    }},
+                    onLikedClick = { /* TODO: 좋아요 화면 */ }
+                )
+            }
+            
+            // 구매내역 화면
+            composable(Route.OrderHistory.path) {
+                val dummyOrderHistory = OrderHistoryUiState(
+                    orderGroups = listOf(
+                        OrderGroupUi(
+                            orderDateLabel = "2024.12.01",
+                            items = listOf(
+                                OrderSummaryUi(
+                                    orderId = "1",
+                                    brandName = "로지텍",
+                                    productName = "게이밍 키보드",
+                                    optionText = "청축 / RGB",
+                                    priceText = "99,000원"
+                                ),
+                                OrderSummaryUi(
+                                    orderId = "2",
+                                    brandName = "로지텍",
+                                    productName = "게이밍 마우스",
+                                    optionText = "16000 DPI",
+                                    priceText = "59,000원"
+                                )
+                            )
+                        )
+                    )
+                )
+                
+                OrderHistoryScreen(
+                    uiState = dummyOrderHistory,
+                    onBack = { 
+                        val popped = nav.popBackStack()
+                        if (!popped) {
+                            nav.navigate(Route.MyPage.path) {
+                                popUpTo(Route.MainGraph.path) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        }
+                    },
+                    onBottomNavClick = { route ->
+                        when (route) {
+                            "home" -> nav.navigate(Route.Home.path) {
+                                popUpTo(Route.MainGraph.path) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                            "top100" -> nav.navigate(Route.Top100.path) {
+                                popUpTo(Route.MainGraph.path) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                            "order" -> nav.navigate(Route.Cart.path) {
+                                popUpTo(Route.MainGraph.path) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                            "MyPage" -> nav.navigate(Route.MyPage.path) {
+                                popUpTo(Route.MainGraph.path) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                        }
+                    },
+                    onTrackDelivery = { /* TODO: 배송 조회 */ },
+                    onReorder = { /* TODO: 재주문 */ }
                 )
             }
         }

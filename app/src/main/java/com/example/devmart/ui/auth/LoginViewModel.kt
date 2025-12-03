@@ -9,10 +9,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import javax.inject.Inject
+import javax.inject.Named
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    retrofit: Retrofit,
+    @Named("backend") retrofit: Retrofit,
     private val tokenStore: TokenStore
 ) : ViewModel() {
     private val api = retrofit.create(AuthApi::class.java)

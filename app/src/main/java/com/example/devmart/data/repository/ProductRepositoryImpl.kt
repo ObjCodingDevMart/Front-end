@@ -7,11 +7,12 @@ import com.example.devmart.domain.repo.ProductRepository
 import com.example.devmart.domain.repo.Result
 import retrofit2.Retrofit
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
 class ProductRepositoryImpl @Inject constructor(
-    retrofit: Retrofit
+    @Named("backend") retrofit: Retrofit
 ) : ProductRepository {
     private val api = retrofit.create(ProductApi::class.java)
 
