@@ -9,6 +9,7 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -17,6 +18,7 @@ object KakaoModule {
 
     @Provides
     @Singleton
+    @Named("kakao")
     fun provideKakaoRetrofit(): Retrofit {
         return Retrofit.Builder()
             .baseUrl("https://dapi.kakao.com")
@@ -27,7 +29,7 @@ object KakaoModule {
 
     @Provides
     @Singleton
-    fun provideKakaoApi(retrofit: Retrofit): KakaoApi {
+    fun provideKakaoApi(@Named("kakao") retrofit: Retrofit): KakaoApi {
         return retrofit.create(KakaoApi::class.java)
     }
 

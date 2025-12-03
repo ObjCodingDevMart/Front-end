@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,7 +29,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,8 +37,10 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Devices
 import com.example.devmart.R
+import java.util.Locale
 import com.example.devmart.domain.model.Product
 import com.example.devmart.domain.model.Review
+import com.example.devmart.ui.component.BackButton
 import com.example.devmart.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,14 +75,7 @@ fun ProductDetailScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Start
                     ) {
-                        IconButton(onClick = onBackClick) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "뒤로가기",
-                                tint = DevBlack
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
+                        BackButton(onClick = onBackClick)
                         Text(
                             text = "Dev Mart",
                             fontWeight = FontWeight.Bold,
@@ -350,6 +343,7 @@ fun TabItem(
     modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    @Suppress("UNUSED_VARIABLE")
     val isPressed by interactionSource.collectIsPressedAsState()
     
     Box(
@@ -405,6 +399,7 @@ fun TabContent(
 fun ProductDetailContent(
     modifier: Modifier = Modifier
 ) {
+    @Suppress("UNUSED_VARIABLE")
     val scrollState = rememberScrollState()
     
     Column(
@@ -576,7 +571,7 @@ fun GuideSection(
 
 @Composable
 fun ReviewSection(
-    productId: String,
+    @Suppress("UNUSED_PARAMETER") productId: String,
     modifier: Modifier = Modifier
 ) {
     // 더미 리뷰 데이터
@@ -686,7 +681,7 @@ fun ReviewHeader(
         ) {
             // 평균 별점
             Text(
-                text = String.format("%.2f",averageRating),
+                text = String.format(Locale.US, "%.2f", averageRating),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = DevNeyvy

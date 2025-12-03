@@ -5,7 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,7 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.devmart.R   // ✅ 네 앱 패키지의 R
+import com.example.devmart.R
+import com.example.devmart.ui.component.BackButton
 
 // 색상 정의
 private val Dark = Color(0xFF30343F)            // 본문 텍스트
@@ -37,7 +38,9 @@ fun UserScreen(
     likedCount: Int,
     onEditProfile: () -> Unit,          // 회원 정보 수정 눌렀을 때 호출
     onBackClick: () -> Unit = {},       // 필요하면 뒤로가기 네비게이션
-    onSearchClick: () -> Unit = {},     // 필요하면 검색
+    onOrderHistoryClick: () -> Unit = {}, // 구매내역
+    onCartClick: () -> Unit = {},       // 장바구니
+    onLikedClick: () -> Unit = {},      // 좋아요
 ) {
     Column(
         modifier = Modifier
@@ -47,30 +50,15 @@ fun UserScreen(
         // 상태바 높이
         Spacer(Modifier.height(44.dp))
 
-        // 헤더 (← Dev Mart 🔍)
+        // 헤더 (← Dev Mart)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(38.dp)
-                .padding(horizontal = 20.dp),
+                .height(48.dp)
+                .padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // ←
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clickable { onBackClick() },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "←",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = HeaderIconColor
-                )
-            }
-
-            Spacer(Modifier.width(10.dp))
+            BackButton(onClick = onBackClick)
 
             Text(
                 text = "Dev Mart",
@@ -78,22 +66,6 @@ fun UserScreen(
                 fontWeight = FontWeight.Bold,
                 color = HeaderIconColor
             )
-
-            Spacer(Modifier.weight(1f))
-
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clickable { onSearchClick() },
-                contentAlignment = Alignment.Center
-            ) {
-
-                Text(
-                    text = "돋보기",
-                    fontSize = 20.sp,
-                    color = HeaderIconColor
-                )
-            }
         }
 
         // 프로필 이미지
@@ -157,13 +129,10 @@ fun UserScreen(
         // 메뉴
         Spacer(Modifier.height(40.dp))
 
-        MenuItem("구매내역") { /* TODO: 네비게이션 */ }
-        MenuItem("장바구니") { /* TODO */ }
-        MenuItem("좋아요") { /* TODO */ }
-        MenuItem("회원 정보 수정") {
-            // ⭐ 여기서 회원정보 수정 화면으로 이동(or bottomSheet)
-            onEditProfile()
-        }
+        MenuItem("구매내역") { onOrderHistoryClick() }
+        MenuItem("장바구니") { onCartClick() }
+        MenuItem("좋아요") { onLikedClick() }
+        MenuItem("회원 정보 수정") { onEditProfile() }
     }
 }
 
@@ -198,7 +167,7 @@ fun MenuItem(
             )
         }
 
-        Divider(
+        HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
             color = DividerGray,
             thickness = 1.dp

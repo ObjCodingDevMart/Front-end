@@ -1,7 +1,6 @@
 package com.example.devmart.ui.order
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.devmart.ui.component.BackButton
 import com.example.devmart.ui.component.BottomNavigationBar
 import com.example.devmart.ui.component.BottomNavItem
 import com.example.devmart.ui.theme.*
@@ -152,23 +152,18 @@ private fun OrderHistoryTopBar(
                 .height(59.dp),
         ) {
             // 왼쪽 뒤로가기
-            Text(
-                text = "←",
-                fontFamily = DevFonts.KakaoBigSans,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                color = DevBlack,
+            BackButton(
+                onClick = onBackClick,
                 modifier = Modifier
                     .align(Alignment.CenterStart)
-                    .padding(start = 20.dp)
-                    .clickable { onBackClick() }
+                    .padding(start = 8.dp)
             )
 
             // 가운데 타이틀
             Text(
                 text = "구매내역",
                 fontFamily = DevFonts.KakaoBigSans,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp,
                 color = DevBlack,
                 modifier = Modifier.align(Alignment.Center)

@@ -44,7 +44,6 @@ fun <T> Top100SearchScreen(
     popularKeywords: List<String>,
 
     modifier: Modifier = Modifier,
-    onCloseClick: () -> Unit = {},
     onSearchSubmit: (String) -> Unit = {},
     onKeywordClick: (String) -> Unit = {}
 ) {
@@ -111,10 +110,11 @@ fun <T> Top100SearchScreen(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                IconButton(onClick = onCloseClick) {
+                // X 버튼: 검색창 비우기
+                IconButton(onClick = { query = "" }) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "닫기",
+                        contentDescription = "검색창 비우기",
                         tint = DevDarkgray
                     )
                 }

@@ -31,11 +31,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.devmart.ui.component.BackButton
 import com.example.devmart.ui.component.OrderItemCard
 import com.example.devmart.ui.component.OrderItemMode
 import com.example.devmart.ui.theme.DevDarkneyvy
+import com.example.devmart.ui.theme.DevFonts
 import com.example.devmart.ui.theme.DevMartTheme
 import com.example.devmart.ui.theme.DevWhite
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
 // ----------------------- 데이터 클래스 -----------------------
 
@@ -60,6 +64,7 @@ data class Address(
 fun PaymentScreen(
     address: Address = Address(),
     products: List<OrderProduct> = emptyList(),
+    onBackClick: () -> Unit = {},
     onNavigateToAddressSearch: () -> Unit = {},
     onSaveAddress: (Address) -> Unit = {},
     onClickPayment: () -> Unit = {}
@@ -73,8 +78,20 @@ fun PaymentScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-
-        Text("결제하기", style = MaterialTheme.typography.headlineSmall)
+        // 상단 헤더: 뒤로가기 + 결제하기
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BackButton(onClick = onBackClick)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "결제하기",
+                fontSize = 20.sp,
+                fontFamily = DevFonts.KakaoBigSans,
+                fontWeight = FontWeight.Bold
+            )
+        }
         Spacer(modifier = Modifier.height(16.dp))
 
         // ------------------ 배송 정보 ------------------
