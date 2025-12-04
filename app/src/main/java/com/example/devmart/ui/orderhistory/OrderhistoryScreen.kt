@@ -6,12 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,10 +18,7 @@ import com.example.devmart.ui.component.BottomNavigationBar
 import com.example.devmart.ui.component.BottomNavItem
 import com.example.devmart.ui.theme.*
 
-/* ------------------------------------------------------------------
- * UI State
- * ------------------------------------------------------------------ */
-
+//model
 data class OrderHistoryUiState(
     val orderGroups: List<OrderGroupUi> = emptyList()
 )
@@ -44,98 +36,116 @@ data class OrderSummaryUi(
     val priceText: String
 )
 
-/* ------------------------------------------------------------------
- * Screen (Scaffold + 상단바 + 하단바)
- * ------------------------------------------------------------------ */
-
+//screen
 @Composable
 fun OrderHistoryScreen(
     uiState: OrderHistoryUiState,
     onBack: () -> Unit = {},
     onBottomNavClick: (String) -> Unit = {},
-    onTrackDelivery: (OrderSummaryUi) -> Unit = {},
     onReorder: (OrderSummaryUi) -> Unit = {},
 ) {
     Scaffold(
         topBar = {
-            Column {
-                // 장바구니와 동일한 상태바 영역
-                Spacer(modifier = Modifier.height(44.dp))
-                OrderHistoryTopBar(onBackClick = onBack)
-            }
+            OrderHistoryTopBar(onBackClick = onBack)
         },
         bottomBar = {
             BottomNavigationBar(
-                currentRoute = BottomNavItem.MyPage.route, // 마이페이지 선택 상태
+                currentRoute = BottomNavItem.MyPage.route,
                 onItemClick = onBottomNavClick
             )
         },
         containerColor = DevWhite
     ) { innerPadding ->
-        Box(
+
+        OrderHistoryContent(
             modifier = Modifier
-                .fillMaxSize()
-                .background(DevWhite)
                 .padding(innerPadding)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 20.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Spacer(Modifier.height(16.dp))
+                .fillMaxSize()
+                .background(DevWhite),
+            uiState = uiState,
+            onReorder = onReorder
+        )
+    }
+}
+@Composable
+private fun OrderHistoryContent(
+    modifier: Modifier,
+    uiState: OrderHistoryUiState,
+    onReorder: (OrderSummaryUi) -> Unit
+) {
+    Column(
+        modifier = modifier
+            .padding(horizontal = 20.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
 
-                // 🔹 상단 Dev Mart 타이틀 + 구분선 (Cart와 동일 구조)
-                Text(
-                    text = "Dev Mart",
-                    fontFamily = DevFonts.KakaoBigSans,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 20.sp,
-                    color = DevDarkneyvy
-                )
+        Spacer(Modifier.height(16.dp))
 
-                Spacer(Modifier.height(4.dp))
+        DevMartHeader()
 
-                HorizontalDivider(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = DevDarkneyvy.copy(alpha = 0.8f),
-                    thickness = 1.dp
-                )
+        Spacer(Modifier.height(16.dp))
 
-                Spacer(Modifier.height(16.dp))
+        OrderHistoryList(
+            orderGroups = uiState.orderGroups,
+            onReorder = onReorder
+        )
+    }
+}
+@Composable
+private fun DevMartHeader() {
+    Text(
+        text = "Dev Mart",
+        fontFamily = DevFonts.KakaoBigSans,
+        fontWeight = FontWeight.ExtraBold,
+        fontSize = 20.sp,
+        color = DevDarkneyvy
+    )
 
-                // 날짜별 상품 리스트
-                uiState.orderGroups.forEach { group ->
-                    Text(
-                        text = group.orderDateLabel,
-                        fontFamily = DevFonts.KakaoBigSans,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
-                        color = DevBlack
-                    )
+    Spacer(Modifier.height(4.dp))
 
-                    Spacer(Modifier.height(8.dp))
-
-                    group.items.forEach { item ->
-                        OrderSummaryCard(
-                            item = item,
-                            onTrackDelivery = { onTrackDelivery(item) },
-                            onReorder = { onReorder(item) }
-                        )
-                        Spacer(Modifier.height(16.dp))
-                    }
-
-                    Spacer(Modifier.height(24.dp))
-                }
-            }
-        }
+    HorizontalDivider(
+        modifier = Modifier.fillMaxWidth(),
+        color = DevDarkneyvy.copy(alpha = 0.8f),
+        thickness = 1.dp
+    )
+}
+@Composable
+private fun OrderHistoryList(
+    orderGroups: List<OrderGroupUi>,
+    onReorder: (OrderSummaryUi) -> Unit
+) {
+    orderGroups.forEach { group ->
+        OrderGroupSection(
+            group = group,
+            onReorder = onReorder
+        )
+        Spacer(Modifier.height(24.dp))
     }
 }
 
-/* ------------------------------------------------------------------
- * 상단 헤더 (CartTopBar와 동일 구조, 타이틀만 구매내역)
- * ------------------------------------------------------------------ */
+@Composable
+private fun OrderGroupSection(
+    group: OrderGroupUi,
+    onReorder: (OrderSummaryUi) -> Unit
+) {
+    Text(
+        text = group.orderDateLabel,
+        fontFamily = DevFonts.KakaoBigSans,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 14.sp,
+        color = DevBlack
+    )
+
+    Spacer(Modifier.height(8.dp))
+
+    group.items.forEach { item ->
+        OrderSummaryCard(
+            item = item,
+            onReorder = { onReorder(item) }
+        )
+        Spacer(Modifier.height(16.dp))
+    }
+}
 
 @Composable
 private fun OrderHistoryTopBar(
@@ -146,12 +156,14 @@ private fun OrderHistoryTopBar(
             .fillMaxWidth()
             .background(DevWhite)
     ) {
+        Spacer(modifier = Modifier.height(44.dp)) // 상태바 패딩
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(59.dp),
+                .height(56.dp),
         ) {
-            // 왼쪽 뒤로가기
+
             Text(
                 text = "←",
                 fontFamily = DevFonts.KakaoBigSans,
@@ -164,34 +176,26 @@ private fun OrderHistoryTopBar(
                     .clickable { onBackClick() }
             )
 
-            // 가운데 타이틀
             Text(
                 text = "구매내역",
                 fontFamily = DevFonts.KakaoBigSans,
                 fontWeight = FontWeight.Medium,
-                fontSize = 16.sp,
+                fontSize = 18.sp,
                 color = DevBlack,
                 modifier = Modifier.align(Alignment.Center)
             )
         }
 
-        // 아래 구분선
         HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
             color = DevDarkgray.copy(alpha = 0.4f),
             thickness = 1.dp
         )
     }
 }
 
-/* ------------------------------------------------------------------
- * 주문 카드 (이미지 크게 + 옵션/가격 + 배송조회/재구매)
- * ------------------------------------------------------------------ */
-
 @Composable
 fun OrderSummaryCard(
     item: OrderSummaryUi,
-    onTrackDelivery: () -> Unit,
     onReorder: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -201,29 +205,27 @@ fun OrderSummaryCard(
         shape = RoundedCornerShape(8.dp),
         shadowElevation = 0.dp
     ) {
+
         Column(
             modifier = Modifier
-                .fillMaxWidth()
                 .padding(12.dp)
         ) {
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
 
-                // 🔹 상품 사진 영역 (조금 더 키움)
                 Box(
                     modifier = Modifier
                         .size(88.dp)
                         .background(DevGray, RoundedCornerShape(8.dp))
                 )
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(Modifier.width(12.dp))
 
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
+                Column(modifier = Modifier.weight(1f)) {
+
                     Text(
                         text = item.brandName,
                         fontFamily = DevFonts.KakaoBigSans,
@@ -232,7 +234,7 @@ fun OrderSummaryCard(
                         color = DevBlack
                     )
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(Modifier.height(4.dp))
 
                     Text(
                         text = item.productName,
@@ -243,7 +245,7 @@ fun OrderSummaryCard(
                         maxLines = 2
                     )
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(Modifier.height(4.dp))
 
                     Text(
                         text = item.optionText,
@@ -253,7 +255,7 @@ fun OrderSummaryCard(
                         color = DevDarkgray
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(Modifier.height(8.dp))
 
                     Text(
                         text = item.priceText,
@@ -265,54 +267,28 @@ fun OrderSummaryCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth()
+            OutlinedButton(
+                onClick = onReorder,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp),
+                shape = RoundedCornerShape(6.dp)
             ) {
-                OutlinedButton(
-                    onClick = onTrackDelivery,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(40.dp),
-                    shape = RoundedCornerShape(6.dp)
-                ) {
-                    Text(
-                        text = "배송 조회",
-                        fontFamily = DevFonts.KakaoBigSans,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp,
-                        color = DevBlack
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                OutlinedButton(
-                    onClick = onReorder,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(40.dp),
-                    shape = RoundedCornerShape(6.dp)
-                ) {
-                    Text(
-                        text = "재구매",
-                        fontFamily = DevFonts.KakaoBigSans,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp,
-                        color = DevBlack
-                    )
-                }
+                Text(
+                    text = "재구매",
+                    fontFamily = DevFonts.KakaoBigSans,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    color = DevBlack
+                )
             }
         }
     }
 }
 
-/* ------------------------------------------------------------------
- * Preview
- * ------------------------------------------------------------------ */
-
-private fun previewOrderHistoryState() = OrderHistoryUiState(
+private fun previewState() = OrderHistoryUiState(
     orderGroups = listOf(
         OrderGroupUi(
             orderDateLabel = "25.08.17(일)",
@@ -323,13 +299,6 @@ private fun previewOrderHistoryState() = OrderHistoryUiState(
                     productName = "황금 마우스",
                     optionText = "BLACK / 1개",
                     priceText = "166,500원"
-                ),
-                OrderSummaryUi(
-                    orderId = "2",
-                    brandName = "커먼유니크",
-                    productName = "보이 크롭 반팔티셔츠",
-                    optionText = "그레이 / L / 1개",
-                    priceText = "29,690원"
                 )
             )
         )
@@ -341,7 +310,44 @@ private fun previewOrderHistoryState() = OrderHistoryUiState(
 private fun PreviewOrderHistory() {
     MaterialTheme {
         OrderHistoryScreen(
-            uiState = previewOrderHistoryState(),
+            uiState = previewState(),
+            onBottomNavClick = {}
+        )
+    }
+}
+
+/* ============================================================
+ *  Preview 1 — 전체 화면 미리보기 (상품 2개)
+ * ============================================================ */
+
+@Preview(showBackground = true, name = "전체 화면 Preview (2개 아이템)")
+@Composable
+private fun PreviewOrderHistoryScreen() {
+    MaterialTheme {
+        OrderHistoryScreen(
+            uiState = OrderHistoryUiState(
+                orderGroups = listOf(
+                    OrderGroupUi(
+                        orderDateLabel = "25.08.17(일)",
+                        items = listOf(
+                            OrderSummaryUi(
+                                orderId = "1",
+                                brandName = "Dev",
+                                productName = "황금 마우스",
+                                optionText = "BLACK / 1개",
+                                priceText = "166,500원"
+                            ),
+                            OrderSummaryUi(
+                                orderId = "2",
+                                brandName = "커먼유니크",
+                                productName = "보이 크롭 반팔티셔츠",
+                                optionText = "그레이 / L / 1개",
+                                priceText = "29,690원"
+                            )
+                        )
+                    )
+                )
+            ),
             onBottomNavClick = {}
         )
     }
