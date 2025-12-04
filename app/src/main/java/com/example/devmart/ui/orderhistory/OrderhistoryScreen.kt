@@ -1,4 +1,4 @@
-package com.example.devmart.ui.order
+package com.example.devmart.ui.orderhistory
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,10 +23,6 @@ import com.example.devmart.ui.component.BottomNavigationBar
 import com.example.devmart.ui.component.BottomNavItem
 import com.example.devmart.ui.theme.*
 
-/* ------------------------------------------------------------------
- * UI State
- * ------------------------------------------------------------------ */
-
 data class OrderHistoryUiState(
     val orderGroups: List<OrderGroupUi> = emptyList()
 )
@@ -43,10 +39,6 @@ data class OrderSummaryUi(
     val optionText: String,
     val priceText: String
 )
-
-/* ------------------------------------------------------------------
- * Screen (Scaffold + 상단바 + 하단바)
- * ------------------------------------------------------------------ */
 
 @Composable
 fun OrderHistoryScreen(
@@ -86,10 +78,10 @@ fun OrderHistoryScreen(
             ) {
                 Spacer(Modifier.height(16.dp))
 
-                // 🔹 상단 Dev Mart 타이틀 + 구분선 (Cart와 동일 구조)
+                // 상단 Dev Mart 타이틀 + 구분선 (Cart와 동일 구조)
                 Text(
                     text = "Dev Mart",
-                    fontFamily = DevFonts.KakaoBigSans,
+                    //fontFamily = DevFonts.KakaoBigSans,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 20.sp,
                     color = DevDarkneyvy
@@ -109,7 +101,7 @@ fun OrderHistoryScreen(
                 uiState.orderGroups.forEach { group ->
                     Text(
                         text = group.orderDateLabel,
-                        fontFamily = DevFonts.KakaoBigSans,
+                        //fontFamily = DevFonts.KakaoBigSans,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
                         color = DevBlack
@@ -133,10 +125,6 @@ fun OrderHistoryScreen(
     }
 }
 
-/* ------------------------------------------------------------------
- * 상단 헤더 (CartTopBar와 동일 구조, 타이틀만 구매내역)
- * ------------------------------------------------------------------ */
-
 @Composable
 private fun OrderHistoryTopBar(
     onBackClick: () -> Unit
@@ -154,7 +142,7 @@ private fun OrderHistoryTopBar(
             // 왼쪽 뒤로가기
             Text(
                 text = "←",
-                fontFamily = DevFonts.KakaoBigSans,
+                //fontFamily = DevFonts.KakaoBigSans,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
                 color = DevBlack,
@@ -167,7 +155,7 @@ private fun OrderHistoryTopBar(
             // 가운데 타이틀
             Text(
                 text = "구매내역",
-                fontFamily = DevFonts.KakaoBigSans,
+                //fontFamily = DevFonts.KakaoBigSans,
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp,
                 color = DevBlack,
@@ -183,10 +171,6 @@ private fun OrderHistoryTopBar(
         )
     }
 }
-
-/* ------------------------------------------------------------------
- * 주문 카드 (이미지 크게 + 옵션/가격 + 배송조회/재구매)
- * ------------------------------------------------------------------ */
 
 @Composable
 fun OrderSummaryCard(
@@ -212,7 +196,7 @@ fun OrderSummaryCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
-                // 🔹 상품 사진 영역 (조금 더 키움)
+                // 상품 사진 영역
                 Box(
                     modifier = Modifier
                         .size(88.dp)
@@ -226,7 +210,7 @@ fun OrderSummaryCard(
                 ) {
                     Text(
                         text = item.brandName,
-                        fontFamily = DevFonts.KakaoBigSans,
+                        //fontFamily = DevFonts.KakaoBigSans,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp,
                         color = DevBlack
@@ -236,7 +220,7 @@ fun OrderSummaryCard(
 
                     Text(
                         text = item.productName,
-                        fontFamily = DevFonts.KakaoBigSans,
+                        //fontFamily = DevFonts.KakaoBigSans,
                         fontWeight = FontWeight.Normal,
                         fontSize = 13.sp,
                         color = DevBlack,
@@ -247,7 +231,7 @@ fun OrderSummaryCard(
 
                     Text(
                         text = item.optionText,
-                        fontFamily = DevFonts.KakaoBigSans,
+                        //fontFamily = DevFonts.KakaoBigSans,
                         fontWeight = FontWeight.Normal,
                         fontSize = 11.sp,
                         color = DevDarkgray
@@ -257,7 +241,7 @@ fun OrderSummaryCard(
 
                     Text(
                         text = item.priceText,
-                        fontFamily = DevFonts.KakaoBigSans,
+                        //fontFamily = DevFonts.KakaoBigSans,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         color = DevBlack
@@ -279,7 +263,7 @@ fun OrderSummaryCard(
                 ) {
                     Text(
                         text = "배송 조회",
-                        fontFamily = DevFonts.KakaoBigSans,
+                        //fontFamily = DevFonts.KakaoBigSans,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp,
                         color = DevBlack
@@ -297,7 +281,7 @@ fun OrderSummaryCard(
                 ) {
                     Text(
                         text = "재구매",
-                        fontFamily = DevFonts.KakaoBigSans,
+                        //fontFamily = DevFonts.KakaoBigSans,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp,
                         color = DevBlack
@@ -308,9 +292,6 @@ fun OrderSummaryCard(
     }
 }
 
-/* ------------------------------------------------------------------
- * Preview
- * ------------------------------------------------------------------ */
 
 private fun previewOrderHistoryState() = OrderHistoryUiState(
     orderGroups = listOf(
