@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>주소 검색</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        html,body{width:100%;height:100%;background:#fff;}
+        #container{
+            width:100%;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            background:#fff;
+        }
+        #searchBtn{
+            padding:16px 32px;
+            font-size:16px;
+            font-weight:bold;
+            background:#FFEB00;
+            border:none;
+            border-radius:8px;
+        }
+        #layer{
+            width:100%;
+            display:none;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <button id="searchBtn">주소 검색</button>
+    </div>
+    <div id="layer"></div>
+    
+    <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <script>
+        function setHeight() {
+            var h = window.innerHeight + 'px';
+            document.getElementById('container').style.height = h;
+            document.getElementById('layer').style.height = h;
+        }
+        setHeight();
+        window.onresize = setHeight;
+        
+        document.getElementById('searchBtn').onclick = function() {
+            document.getElementById('container').style.display = 'none';
+            var layer = document.getElementById('layer');
+            layer.style.display = 'block';
+            
+            new daum.Postcode({
+                oncomplete: function(data) {
+                    Android.onAddressSelected(
+                        data.zonecode || '',
+                        data.roadAddress || '',
+                        data.jibunAddress || data.autoJibunAddress || '',
+                        data.buildingName || ''
+                    );
+                },
+                width: '100%',
+                height: '100%'
+            }).embed(layer);
+        };
+    </script>
+</body>
+</html>

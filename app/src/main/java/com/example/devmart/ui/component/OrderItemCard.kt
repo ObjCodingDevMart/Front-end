@@ -143,9 +143,9 @@ fun OrderItemCard(
                     style = MaterialTheme.typography.bodySmall,
                     fontFamily = KakaoBigSans,
                     color = DevDarkgray
-                )
-            }
-        }
+                        )
+                    }
+                }
 
         // ---------- 삭제 버튼 (Editable 모드만) ----------
         if (mode == OrderItemMode.Editable) {
