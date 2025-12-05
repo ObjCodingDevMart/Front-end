@@ -32,12 +32,12 @@ class PaymentViewModel @Inject constructor(
         // }
 
         // 더미 데이터 (API 연동 전)
-        _address.value = Address(
+                    _address.value = Address(
             postalCode = "",
             roadAddress = "",
             detail = "",
             jibunAddress = ""
-        )
+                    )
     }
 
     fun updateMyAddress(address: Address) {
