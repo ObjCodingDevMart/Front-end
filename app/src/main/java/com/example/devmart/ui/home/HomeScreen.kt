@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
@@ -107,36 +107,41 @@ fun HomeScreen(
             )
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                // 이미지 슬라이드 카드뉴스
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = 0.dp,
+                bottom = 16.dp
+            ),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            // 배너 (전체 너비 차지)
+            item(span = { GridItemSpan(2) }) {
                 ImageSliderBanner()
-                
-                // 필터 버튼들
+            }
+            
+            // 필터 칩 (전체 너비 차지)
+            item(span = { GridItemSpan(2) }) {
                 FilterChips(
                     categories = categories,
                     selectedCategory = selectedCategory,
                     onCategorySelected = { selectedCategory = it }
                 )
-                
-                // 상품 그리드
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(products) { product ->
-                        ProductCard(
-                            product = product,
-                            onClick = { openDetail(product.id) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
+            }
+            
+            // 상품 그리드
+            items(products) { product ->
+                ProductCard(
+                    product = product,
+                    onClick = { openDetail(product.id) },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
