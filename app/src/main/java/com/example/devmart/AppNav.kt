@@ -363,10 +363,7 @@ fun AppNav() {
                         launchSingleTop = true
                     }},
                     onOrderHistoryClick = { nav.navigate(Route.OrderHistory.path) },
-                    onCartClick = { nav.navigate(Route.Cart.path) {
-                        popUpTo(Route.MainGraph.path) { inclusive = false }
-                        launchSingleTop = true
-                    }},
+                    onCartClick = { nav.navigate(Route.Cart.path) },
                     onLikedClick = { nav.navigate(Route.Wishlist.path) }
                 )
             }
