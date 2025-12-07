@@ -28,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.devmart.ui.component.BackButton
@@ -165,7 +164,7 @@ fun DeliveryInfoBox(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp))
+            .background(DevWhite, RoundedCornerShape(12.dp))
             .padding(16.dp)
     ) {
         Text(
@@ -258,7 +257,7 @@ fun PriceSummaryBox(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFE9E9E9), RoundedCornerShape(12.dp))
+            .background(DevWhite, RoundedCornerShape(12.dp))
             .padding(16.dp)
     ) {
         PriceRow(label = "상품금액", value = productPrice)

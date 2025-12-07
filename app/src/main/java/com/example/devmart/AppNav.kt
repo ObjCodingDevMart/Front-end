@@ -33,6 +33,10 @@ import com.example.devmart.ui.order.OrderHistoryUiState
 import com.example.devmart.ui.order.OrderGroupUi
 import com.example.devmart.ui.order.OrderSummaryUi
 import com.example.devmart.ui.user.UserScreen
+import com.example.devmart.ui.wishlist.WishlistScreen
+import com.example.devmart.ui.wishlist.WishlistScreenState
+import com.example.devmart.ui.wishlist.WishlistScreenActions
+import com.example.devmart.ui.wishlist.WishlistItemUi
 
 @Suppress("DEPRECATION")
 @Composable
@@ -112,13 +116,32 @@ fun AppNav() {
                 // TODO: id로 상품 정보 가져오기 (API 연동 시 사용)
                 val id = backStackEntry.arguments?.getString("id").orEmpty()
                 Log.d("AppNav", "ProductDetail: $id")
+                
+                // 현재 표시 중인 상품 (나중에 API에서 가져오도록 수정)
+                val currentProduct = com.example.devmart.domain.model.Product(
+                    id = id,
+                    brand = "fkqlt",
+                    title = "fkqlt iphone 케이스",
+                    price = 16000,
+                    imageUrl = null
+                )
+                
                 ProductDetailScreen(
-                    product = null,
+                    product = currentProduct,
                     onBackClick = { nav.popBackStack() },
-                    onSearchClick = { /* TODO: 검색 화면으로 이동 */ },
+                    onSearchClick = { nav.navigate(Route.Top100.path) },
                     onLikeClick = { /* TODO: 좋아요 기능 구현 */ },
                     onAddToCart = { /* TODO: 장바구니 추가 기능 구현 */ },
-                    onBuyNow = { /* TODO: 바로 구매 기능 구현 */ }
+                    onBuyNow = {
+                        // 바로 구매: 현재 상품 정보를 Payment로 전달
+                        nav.currentBackStackEntry?.savedStateHandle?.apply {
+                            set("buyNowProductId", currentProduct.id)
+                            set("buyNowProductName", currentProduct.title)
+                            set("buyNowProductBrand", currentProduct.brand)
+                            set("buyNowProductPrice", currentProduct.price)
+                        }
+                        nav.navigate(Route.Payment.path)
+                    }
                 )
             }
             composable(Route.Payment.path) { backStackEntry ->
@@ -152,16 +175,43 @@ fun AppNav() {
                     }
                 }
                 
-                // 더미 상품 (나중에 장바구니에서 전달받도록 수정)
-                val products = listOf(
-                    OrderProduct("1", "게이밍 키보드", "청축 스위치 / RGB", 99000, 1),
-                    OrderProduct("2", "게이밍 마우스", "16000 DPI / 블랙", 59000, 2)
-                )
+                // 바로 구매 상품 확인 (ProductDetail에서 전달)
+                val prevSavedStateHandle = nav.previousBackStackEntry?.savedStateHandle
+                val buyNowProductId = prevSavedStateHandle?.get<String>("buyNowProductId")
+                val buyNowProductName = prevSavedStateHandle?.get<String>("buyNowProductName")
+                val buyNowProductBrand = prevSavedStateHandle?.get<String>("buyNowProductBrand")
+                val buyNowProductPrice = prevSavedStateHandle?.get<Long>("buyNowProductPrice")
+                
+                // 바로 구매 상품이 있으면 해당 상품만, 없으면 장바구니 상품
+                val products = if (buyNowProductId != null && buyNowProductName != null && buyNowProductPrice != null) {
+                    // 바로 구매: 해당 상품 1개만
+                    listOf(
+                        OrderProduct(
+                            id = buyNowProductId,
+                            name = buyNowProductName,
+                            detail = buyNowProductBrand ?: "",
+                            price = buyNowProductPrice.toInt(),
+                            qty = 1
+                        )
+                    )
+                } else {
+                    // 장바구니에서 온 경우: 장바구니 상품들 (더미)
+                    listOf(
+                        OrderProduct("1", "게이밍 키보드", "청축 스위치 / RGB", 99000, 1),
+                        OrderProduct("2", "게이밍 마우스", "16000 DPI / 블랙", 59000, 2)
+                    )
+                }
                 
                 PaymentScreen(
                     address = addressState ?: com.example.devmart.ui.payment.Address(),
                     products = products,
                     onBackClick = { 
+                        // 바로 구매 데이터 정리
+                        prevSavedStateHandle?.remove<String>("buyNowProductId")
+                        prevSavedStateHandle?.remove<String>("buyNowProductName")
+                        prevSavedStateHandle?.remove<String>("buyNowProductBrand")
+                        prevSavedStateHandle?.remove<Long>("buyNowProductPrice")
+                        
                         val popped = nav.popBackStack()
                         if (!popped) {
                             // 백스택이 비어있으면 Cart로 이동
@@ -313,11 +363,62 @@ fun AppNav() {
                         launchSingleTop = true
                     }},
                     onOrderHistoryClick = { nav.navigate(Route.OrderHistory.path) },
-                    onCartClick = { nav.navigate(Route.Cart.path) {
-                        popUpTo(Route.MainGraph.path) { inclusive = false }
-                        launchSingleTop = true
-                    }},
-                    onLikedClick = { /* TODO: 좋아요 화면 */ }
+                    onCartClick = { nav.navigate(Route.Cart.path) },
+                    onLikedClick = { nav.navigate(Route.Wishlist.path) }
+                )
+            }
+            
+            // 좋아요(위시리스트) 화면
+            composable(Route.Wishlist.path) {
+                // 더미 위시리스트 데이터
+                val dummyWishlistState = WishlistScreenState(
+                    items = listOf(
+                        WishlistItemUi(1, "수아레", "데일리 헨리넥 니트 - 5 COLOR", "29,900원"),
+                        WishlistItemUi(2, "에이카화이트", "EVERYDAY AECA CLOVER HOODIE", "63,200원"),
+                        WishlistItemUi(3, "수아레", "데일리 라운드 니트 - 12 COLOR", "29,900원"),
+                        WishlistItemUi(4, "무드인사이드", "노먼 브러쉬 노르딕 니트_6Color", "45,900원"),
+                        WishlistItemUi(5, "테이크이지", "빈티지 오버 듀플린 체크 셔츠", "33,900원"),
+                        WishlistItemUi(6, "도프제이슨", "[데일리룩 PICK] 솔리드 무톤 자켓", "169,000원")
+                    )
+                )
+                
+                WishlistScreen(
+                    state = dummyWishlistState,
+                    actions = WishlistScreenActions(
+                        onBackClick = { 
+                            val popped = nav.popBackStack()
+                            if (!popped) {
+                                nav.navigate(Route.MyPage.path) {
+                                    popUpTo(Route.MainGraph.path) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            }
+                        },
+                        onBottomNavClick = { route ->
+                            when (route) {
+                                "home" -> nav.navigate(Route.Home.path) {
+                                    popUpTo(Route.MainGraph.path) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                                "top100" -> nav.navigate(Route.Top100.path) {
+                                    popUpTo(Route.MainGraph.path) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                                "order" -> nav.navigate(Route.Cart.path) {
+                                    popUpTo(Route.MainGraph.path) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                                "MyPage" -> nav.navigate(Route.MyPage.path) {
+                                    popUpTo(Route.MainGraph.path) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            }
+                        },
+                        onItemClick = { item ->
+                            // 위시리스트 아이템 클릭 시 상세 화면으로 이동
+                            nav.navigate(Route.Detail.withId(item.id.toString()))
+                        }
+                    )
                 )
             }
             
@@ -378,7 +479,6 @@ fun AppNav() {
                             }
                         }
                     },
-                    onTrackDelivery = { /* TODO: 배송 조회 */ },
                     onReorder = { /* TODO: 재주문 */ }
                 )
             }
