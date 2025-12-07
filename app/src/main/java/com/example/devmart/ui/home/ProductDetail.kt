@@ -3,8 +3,6 @@ package com.example.devmart.ui.home
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +36,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -48,6 +49,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,6 +77,7 @@ import com.example.devmart.ui.theme.DevNeyvy
 import com.example.devmart.ui.theme.DevWhite
 import com.example.devmart.ui.theme.PADDING_H
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,7 +103,20 @@ fun ProductDetailScreen(
     
     val tabs = listOf("상품 상세", "구매 안내", "리뷰")
     
+    // 스낵바
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+    
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = DevBlack,
+                    contentColor = DevWhite
+                )
+            }
+        },
         topBar = {
             TopAppBar(
                 title = {
@@ -137,8 +153,18 @@ fun ProductDetailScreen(
                 onLikeClick = {
                     isLiked = !isLiked
                     onLikeClick()
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(
+                            if (isLiked) "좋아요에 추가되었습니다" else "좋아요가 해제되었습니다"
+                        )
+                    }
                 },
-                onAddToCart = onAddToCart,
+                onAddToCart = {
+                    onAddToCart()
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar("장바구니에 추가되었습니다")
+                    }
+                },
                 onBuyNow = onBuyNow
             )
         }
@@ -375,18 +401,10 @@ fun TabItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    @Suppress("UNUSED_VARIABLE")
-    val isPressed by interactionSource.collectIsPressedAsState()
-    
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(
-                onClick = onClick,
-                interactionSource = interactionSource,
-                indication = null
-            )
+            .clickable(onClick = onClick)
             .padding(vertical = 16.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -432,9 +450,6 @@ fun TabContent(
 fun ProductDetailContent(
     modifier: Modifier = Modifier
 ) {
-    @Suppress("UNUSED_VARIABLE")
-    val scrollState = rememberScrollState()
-    
     Column(
         modifier = modifier
             .fillMaxWidth()
