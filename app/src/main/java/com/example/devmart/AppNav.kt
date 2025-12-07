@@ -129,7 +129,7 @@ fun AppNav() {
                 ProductDetailScreen(
                     product = currentProduct,
                     onBackClick = { nav.popBackStack() },
-                    onSearchClick = { /* TODO: 검색 화면으로 이동 */ },
+                    onSearchClick = { nav.navigate(Route.Top100.path) },
                     onLikeClick = { /* TODO: 좋아요 기능 구현 */ },
                     onAddToCart = { /* TODO: 장바구니 추가 기능 구현 */ },
                     onBuyNow = {
