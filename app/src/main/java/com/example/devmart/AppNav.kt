@@ -1,12 +1,18 @@
 package com.example.devmart
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.compose.*
-import com.example.devmart.domain.model.Product
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
+import androidx.navigation.compose.rememberNavController
 import com.example.devmart.ui.auth.LoginScreen
 import com.example.devmart.ui.auth.SplashScreen
 import com.example.devmart.ui.auth.Top100SearchScreen
+import com.example.devmart.ui.auth.Top100ViewModel
 import com.example.devmart.ui.cart.CartScreen
 import com.example.devmart.ui.cart.CartScreenState
 import com.example.devmart.ui.cart.CartScreenActions
@@ -28,6 +34,7 @@ import com.example.devmart.ui.order.OrderGroupUi
 import com.example.devmart.ui.order.OrderSummaryUi
 import com.example.devmart.ui.user.UserScreen
 
+@Suppress("DEPRECATION")
 @Composable
 fun AppNav() {
     val nav = rememberNavController()
@@ -101,8 +108,8 @@ fun AppNav() {
                 ) 
             }
             composable(Route.Detail.path) { backStackEntry ->
-                // TODO: id로 상품 정보 가져오기
-                @Suppress("UNUSED_VARIABLE")
+                // TODO: id로 상품 정보 가져오기 (API 연동 시 사용)
+                @Suppress("unused")
                 val id = backStackEntry.arguments?.getString("id").orEmpty()
                 ProductDetailScreen(
                     product = null,
@@ -195,19 +202,14 @@ fun AppNav() {
             
             // Top100 검색 화면
             composable(Route.Top100.path) {
-                // 더미 상품 데이터
-                val dummyProducts = List(12) { index ->
-                    Product(
-                        id = "product-$index",
-                        brand = "Brand",
-                        title = "상품 $index",
-                        price = 60000L,
-                        imageUrl = null
-                    )
-                }
+                val viewModel: Top100ViewModel = hiltViewModel()
+                val allProducts by viewModel.allProducts.collectAsState()
+                val searchResults by viewModel.searchResults.collectAsState()
+                val query by viewModel.query.collectAsState()
+                val recentSearches by viewModel.recentSearches.collectAsState()
                 
                 Top100SearchScreen(
-                    products = dummyProducts,
+                    allProducts = allProducts,
                     productCard = { product ->
                         ProductCard(
                             product = product,
@@ -232,10 +234,14 @@ fun AppNav() {
                             }
                         }
                     },
-                    recentSearches = listOf("키보드", "마우스", "모니터"),
-                    popularKeywords = listOf("기계식 키보드", "게이밍 마우스", "무선 이어폰", "노트북 거치대"),
-                    onSearchSubmit = { /* TODO: 검색 처리 */ },
-                    onKeywordClick = { /* TODO: 키워드 검색 처리 */ }
+                    recentSearches = recentSearches,
+                    popularKeywords = viewModel.popularKeywords,
+                    searchResults = searchResults,
+                    query = query,
+                    onQueryChange = { viewModel.updateQuery(it) },
+                    onClearQuery = { viewModel.clearQuery() },
+                    onSearchSubmit = { viewModel.search() },
+                    onKeywordClick = { viewModel.searchByKeyword(it) }
                 )
             }
             
