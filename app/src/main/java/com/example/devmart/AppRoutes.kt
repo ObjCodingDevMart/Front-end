@@ -13,4 +13,5 @@ sealed class Route(val path: String) {
     data object OrderHistory : Route("orderHistory")
     data object Payment : Route("payment")
     data object AddressSearch : Route("addressSearch")
+    data object Wishlist : Route("wishlist")
 }

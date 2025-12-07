@@ -33,6 +33,10 @@ import com.example.devmart.ui.order.OrderHistoryUiState
 import com.example.devmart.ui.order.OrderGroupUi
 import com.example.devmart.ui.order.OrderSummaryUi
 import com.example.devmart.ui.user.UserScreen
+import com.example.devmart.ui.wishlist.WishlistScreen
+import com.example.devmart.ui.wishlist.WishlistScreenState
+import com.example.devmart.ui.wishlist.WishlistScreenActions
+import com.example.devmart.ui.wishlist.WishlistItemUi
 
 @Suppress("DEPRECATION")
 @Composable
@@ -363,7 +367,61 @@ fun AppNav() {
                         popUpTo(Route.MainGraph.path) { inclusive = false }
                         launchSingleTop = true
                     }},
-                    onLikedClick = { /* TODO: 좋아요 화면 */ }
+                    onLikedClick = { nav.navigate(Route.Wishlist.path) }
+                )
+            }
+            
+            // 좋아요(위시리스트) 화면
+            composable(Route.Wishlist.path) {
+                // 더미 위시리스트 데이터
+                val dummyWishlistState = WishlistScreenState(
+                    items = listOf(
+                        WishlistItemUi(1, "수아레", "데일리 헨리넥 니트 - 5 COLOR", "29,900원"),
+                        WishlistItemUi(2, "에이카화이트", "EVERYDAY AECA CLOVER HOODIE", "63,200원"),
+                        WishlistItemUi(3, "수아레", "데일리 라운드 니트 - 12 COLOR", "29,900원"),
+                        WishlistItemUi(4, "무드인사이드", "노먼 브러쉬 노르딕 니트_6Color", "45,900원"),
+                        WishlistItemUi(5, "테이크이지", "빈티지 오버 듀플린 체크 셔츠", "33,900원"),
+                        WishlistItemUi(6, "도프제이슨", "[데일리룩 PICK] 솔리드 무톤 자켓", "169,000원")
+                    )
+                )
+                
+                WishlistScreen(
+                    state = dummyWishlistState,
+                    actions = WishlistScreenActions(
+                        onBackClick = { 
+                            val popped = nav.popBackStack()
+                            if (!popped) {
+                                nav.navigate(Route.MyPage.path) {
+                                    popUpTo(Route.MainGraph.path) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            }
+                        },
+                        onBottomNavClick = { route ->
+                            when (route) {
+                                "home" -> nav.navigate(Route.Home.path) {
+                                    popUpTo(Route.MainGraph.path) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                                "top100" -> nav.navigate(Route.Top100.path) {
+                                    popUpTo(Route.MainGraph.path) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                                "order" -> nav.navigate(Route.Cart.path) {
+                                    popUpTo(Route.MainGraph.path) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                                "MyPage" -> nav.navigate(Route.MyPage.path) {
+                                    popUpTo(Route.MainGraph.path) { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                            }
+                        },
+                        onItemClick = { item ->
+                            // 위시리스트 아이템 클릭 시 상세 화면으로 이동
+                            nav.navigate(Route.Detail.withId(item.id.toString()))
+                        }
+                    )
                 )
             }
             

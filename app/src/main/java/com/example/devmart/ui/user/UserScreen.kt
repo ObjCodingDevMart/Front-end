@@ -3,7 +3,16 @@ package com.example.devmart.ui.user
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -12,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,11 +28,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.devmart.R
 import com.example.devmart.ui.component.BackButton
+import com.example.devmart.ui.theme.DevBlack
+import com.example.devmart.ui.theme.DevDarkgray
+import com.example.devmart.ui.theme.DevGray
+import com.example.devmart.ui.theme.DevWhite
 
-// 색상 정의
-private val Dark = Color(0xFF30343F)            // 본문 텍스트
-private val HeaderIconColor = Color(0xFF1E2749) // 헤더 컴포넌트 색
-private val DividerGray = Color(0xFF898989).copy(alpha = 0.2f) // 연한 구분선
 
 // -------------------- 메인 화면 --------------------
 
@@ -45,7 +53,7 @@ fun UserScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAFAFF))
+            .background(DevWhite)
     ) {
         // 상태바 높이
         Spacer(Modifier.height(44.dp))
@@ -64,7 +72,7 @@ fun UserScreen(
                 text = "Dev Mart",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = HeaderIconColor
+                color = DevBlack
             )
         }
 
@@ -91,7 +99,7 @@ fun UserScreen(
             text = "${nickname}님, 반가워요!",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = Dark,
+            color = DevBlack,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
@@ -101,9 +109,9 @@ fun UserScreen(
         Row(
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
-            Text("$emailLocal@", fontSize = 14.sp, color = Color(0xFF898989))
+            Text("$emailLocal@", fontSize = 14.sp, color = DevDarkgray)
             Spacer(Modifier.width(4.dp))
-            Text(emailDomain, fontSize = 14.sp, color = Color(0xFF898989))
+            Text(emailDomain, fontSize = 14.sp, color = DevDarkgray)
         }
 
         // 포인트 / 배송중 / 좋아요
@@ -140,8 +148,8 @@ fun UserScreen(
 @Composable
 fun UserInfoSmall(title: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(title, fontSize = 12.sp, color = Dark.copy(alpha = 0.7f))
-        Text(value, fontSize = 14.sp, color = Dark)
+        Text(title, fontSize = 12.sp, color = DevDarkgray)
+        Text(value, fontSize = 14.sp, color = DevBlack)
     }
 }
 
@@ -162,14 +170,14 @@ fun MenuItem(
             Text(
                 text = text,
                 fontSize = 12.sp,
-                color = Dark,
+                color = DevBlack,
                 modifier = Modifier.padding(vertical = 18.dp)
             )
         }
 
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
-            color = DividerGray,
+            color = DevGray,
             thickness = 1.dp
         )
     }
