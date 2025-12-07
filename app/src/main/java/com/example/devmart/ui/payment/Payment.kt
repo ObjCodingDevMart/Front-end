@@ -233,7 +233,7 @@ fun DeliveryInfoBox(
                         Address(
                             postalCode = postal,
                             roadAddress = road,
-                            jibunAddress = address.jibunAddress, // 그대로 유지
+                            jibunAddress = address.jibunAddress,
                             detail = detail
                         )
                     )

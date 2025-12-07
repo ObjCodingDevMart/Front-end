@@ -1,5 +1,6 @@
 package com.example.devmart
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -25,8 +26,7 @@ import com.example.devmart.ui.session.AuthState
 import com.example.devmart.ui.session.SessionViewModel
 import com.example.devmart.ui.payment.PaymentScreen
 import com.example.devmart.ui.payment.PaymentViewModel
-import com.example.devmart.ui.payment.AddressSearchScreen
-import com.example.devmart.ui.payment.AddressSearchViewModel
+import com.example.devmart.ui.payment.DaumPostcodeScreen
 import com.example.devmart.ui.payment.OrderProduct
 import com.example.devmart.ui.order.OrderHistoryScreen
 import com.example.devmart.ui.order.OrderHistoryUiState
@@ -38,6 +38,7 @@ import com.example.devmart.ui.user.UserScreen
 @Composable
 fun AppNav() {
     val nav = rememberNavController()
+    @Suppress("DEPRECATION")
     val session: SessionViewModel = hiltViewModel()
     val auth by session.auth.collectAsState()
 
@@ -109,8 +110,8 @@ fun AppNav() {
             }
             composable(Route.Detail.path) { backStackEntry ->
                 // TODO: id로 상품 정보 가져오기 (API 연동 시 사용)
-                @Suppress("unused")
                 val id = backStackEntry.arguments?.getString("id").orEmpty()
+                Log.d("AppNav", "ProductDetail: $id")
                 ProductDetailScreen(
                     product = null,
                     onBackClick = { nav.popBackStack() },
@@ -121,6 +122,7 @@ fun AppNav() {
                 )
             }
             composable(Route.Payment.path) { backStackEntry ->
+                @Suppress("DEPRECATION")
                 val paymentViewModel: PaymentViewModel = hiltViewModel()
                 val addressState by paymentViewModel.address.collectAsState()
                 
@@ -180,19 +182,13 @@ fun AppNav() {
                 )
             }
             composable(Route.AddressSearch.path) {
-                val addressSearchViewModel: AddressSearchViewModel = hiltViewModel()
-                
-                AddressSearchScreen(
-                    keyword = addressSearchViewModel.keyword,
-                    results = addressSearchViewModel.results,
-                    onKeywordChange = { addressSearchViewModel.updateKeyword(it) },
-                    onSearch = { addressSearchViewModel.search() },
-                    onSelect = { address ->
-                        // 개별 필드로 저장 (Parcelable 없이 전달)
+                DaumPostcodeScreen(
+                    onAddressSelected = { postalCode, roadAddress, jibunAddress, _ ->
+                        // 선택한 주소를 Payment 화면으로 전달
                         nav.previousBackStackEntry?.savedStateHandle?.apply {
-                            set("selectedRoadAddress", address.roadAddress)
-                            set("selectedPostalCode", address.postalCode)
-                            set("selectedJibunAddress", address.jibunAddress)
+                            set("selectedRoadAddress", roadAddress)
+                            set("selectedPostalCode", postalCode)
+                            set("selectedJibunAddress", jibunAddress)
                         }
                         nav.popBackStack()
                     },

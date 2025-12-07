@@ -18,6 +18,7 @@ class LoginViewModel @Inject constructor(
 ) : ViewModel() {
     private val api = retrofit.create(AuthApi::class.java)
 
+    @Suppress("unused") // 로컬 로그인 제거됨, 카카오 로그인만 사용
     fun login(email: String, password: String, onError: (String)->Unit) {
         viewModelScope.launch {
             kotlin.runCatching { api.login(LoginRequest(email, password)) }

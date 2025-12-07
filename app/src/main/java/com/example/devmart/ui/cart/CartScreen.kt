@@ -193,7 +193,7 @@ fun CartScreen(
                         color = DevWhite
                     )
                 }
-                
+
                 Spacer(Modifier.height(24.dp))
             }
         }
@@ -227,7 +227,7 @@ private fun CartTopBar(
             // 가운데 타이틀
             Text(
                 text = "장바구니",
-                fontSize = 16.sp,
+                    fontSize = 16.sp,
                 fontFamily = DevFonts.KakaoBigSans,
                 fontWeight = FontWeight.SemiBold,
                 color = DevBlack,
