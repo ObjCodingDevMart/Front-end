@@ -3,13 +3,22 @@ package com.example.devmart.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.devmart.data.remote.AuthApi
-import com.example.devmart.data.remote.LoginRequest
+import com.example.devmart.data.remote.KakaoLoginRequest
 import com.example.devmart.data.local.TokenStore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import javax.inject.Inject
 import javax.inject.Named
+
+// --- UI State ---
+data class LoginUiState(
+    val isLoading: Boolean = false,
+    val error: String? = null
+)
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
@@ -17,13 +26,29 @@ class LoginViewModel @Inject constructor(
     private val tokenStore: TokenStore
 ) : ViewModel() {
     private val api = retrofit.create(AuthApi::class.java)
-
-    @Suppress("unused") // 로컬 로그인 제거됨, 카카오 로그인만 사용
-    fun login(email: String, password: String, onError: (String)->Unit) {
+    
+    private val _uiState = MutableStateFlow(LoginUiState())
+    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+    
+    // 카카오 로그인: 카카오 액세스 토큰을 백엔드에 전달하여 서버 액세스 토큰 받기
+    fun loginWithKakao(kakaoAccessToken: String, onError: (String) -> Unit) {
         viewModelScope.launch {
-            kotlin.runCatching { api.login(LoginRequest(email, password)) }
-                .onSuccess { tokenStore.save(it.accessToken) } // 성공 → Session이 Authenticated로 변함
-                .onFailure { onError(it.message ?: "로그인 실패") }
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            
+            kotlin.runCatching { 
+                api.loginWithKakao(KakaoLoginRequest(kakaoAccessToken)) 
+            }
+                .onSuccess { response ->
+                    tokenStore.save(response.accessToken)
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                }
+                .onFailure { error ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = error.message ?: "카카오 로그인 실패"
+                    )
+                    onError(error.message ?: "카카오 로그인 실패")
+                }
         }
     }
 }

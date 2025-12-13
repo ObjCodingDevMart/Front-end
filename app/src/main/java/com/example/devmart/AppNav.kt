@@ -5,15 +5,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.example.devmart.ui.auth.LoginScreen
+import com.example.devmart.ui.auth.LoginViewModel
 import com.example.devmart.ui.auth.SplashScreen
 import com.example.devmart.ui.auth.Top100SearchScreen
 import com.example.devmart.ui.auth.Top100ViewModel
+import com.kakao.sdk.auth.model.OAuthToken
+import com.kakao.sdk.user.UserApiClient
 import com.example.devmart.ui.cart.CartScreen
 import com.example.devmart.ui.cart.CartScreenState
 import com.example.devmart.ui.cart.CartScreenActions
@@ -68,6 +72,10 @@ fun AppNav() {
         // 인증 그래프
         navigation(startDestination = Route.Login.path, route = Route.AuthGraph.path) {
             composable(Route.Login.path) {
+                val loginViewModel: LoginViewModel = hiltViewModel()
+                val loginState by loginViewModel.uiState.collectAsState()
+                val context = LocalContext.current
+                
                 // 로그인 상태 관찰 - 인증되면 MainGraph로 이동
                 LaunchedEffect(auth) {
                     if (auth is AuthState.Authenticated) {
@@ -77,12 +85,28 @@ fun AppNav() {
                     }
                 }
                 
+                // 카카오 로그인 콜백
+                val kakaoLoginCallback: (OAuthToken?, Throwable?) -> Unit = { token, error ->
+                    if (error != null) {
+                        Log.e("KakaoLogin", "카카오 로그인 실패", error)
+                    } else if (token != null) {
+                        // 카카오 액세스 토큰을 백엔드에 전달
+                        loginViewModel.loginWithKakao(token.accessToken) { errorMessage ->
+                            Log.e("KakaoLogin", "백엔드 로그인 실패: $errorMessage")
+                        }
+                    }
+                }
+                
                 LoginScreen(
+                    state = loginState,
                     onClickKakao = {
-                        // TODO: 카카오 로그인 구현
-                        // 테스트용: 바로 HomeScreen으로 이동
-                        nav.navigate(Route.MainGraph.path) {
-                            popUpTo(Route.AuthGraph.path) { inclusive = true }
+                        // 카카오 로그인 시작
+                        if (UserApiClient.instance.isKakaoTalkLoginAvailable(context)) {
+                            // 카카오톡 로그인
+                            UserApiClient.instance.loginWithKakaoTalk(context, callback = kakaoLoginCallback)
+                        } else {
+                            // 카카오계정 로그인
+                            UserApiClient.instance.loginWithKakaoAccount(context, callback = kakaoLoginCallback)
                         }
                     }
                 )

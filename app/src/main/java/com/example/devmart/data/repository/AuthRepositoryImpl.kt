@@ -17,13 +17,6 @@ class AuthRepositoryImpl @Inject constructor(
 ) : AuthRepository {
     private val api = retrofit.create(AuthApi::class.java)
 
-    override suspend fun login(email: String, password: String): Result<Unit> =
-        try {
-            val token = api.login(com.example.devmart.data.remote.LoginRequest(email, password)).accessToken
-            tokenStore.save(token)
-            Result.Ok(Unit)
-        } catch (t: Throwable) { Result.Err(t.message ?: "login failed", t) }
-
     override suspend fun me(): Result<com.example.devmart.domain.model.User> =
         try { Result.Ok(api.me().toDomain()) }
         catch (t: Throwable) { Result.Err(t.message ?: "me failed", t) }
