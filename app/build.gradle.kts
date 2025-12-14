@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +7,17 @@ plugins {
     alias(libs.plugins.hilt)
     kotlin("kapt")
 }
+
+// local.properties 파일에서 민감한 키 읽기
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { localProperties.load(it) }
+}
+
+// local.properties에서 키 가져오기 (없으면 빈 문자열)
+val nativeAppKey = localProperties.getProperty("NATIVE_APP_KEY", "")
+val kakaoLatestVersion = localProperties.getProperty("KAKAO_LATEST_VERSION", "2.23.1")
 
 android {
     namespace = "com.example.devmart"
@@ -15,8 +28,14 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-        // TODO: AWS 도메인으로 교체
-        buildConfigField("String", "BASE_URL", "\"https://api.devmart.shop/\"")
+
+        buildConfigField("String", "BASE_URL", "\"http://coda-dev-env.eba-pdmadfde.ap-northeast-2.elasticbeanstalk.com\"")
+        
+        // BuildConfig에 키 추가 (코드에서 사용 가능)
+        buildConfigField("String", "NATIVE_APP_KEY", "\"$nativeAppKey\"")
+        
+        // AndroidManifest.xml에서 사용할 수 있도록 manifestPlaceholders 설정
+        manifestPlaceholders["NATIVE_APP_KEY"] = nativeAppKey
     }
     buildFeatures { compose = true; buildConfig = true }
     compileOptions {
@@ -80,4 +99,8 @@ dependencies {
     androidTestImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+
+
+    //kakao login
+    implementation("com.kakao.sdk:v2-user:$kakaoLatestVersion")
 }

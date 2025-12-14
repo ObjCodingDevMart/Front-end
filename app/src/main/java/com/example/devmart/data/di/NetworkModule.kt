@@ -24,7 +24,16 @@ object NetworkModule {
         val req = if (!token.isNullOrBlank())
             chain.request().newBuilder().addHeader("Authorization", "Bearer $token").build()
         else chain.request()
-        chain.proceed(req)
+        
+        val response = chain.proceed(req)
+        
+        // 401 Unauthorized 응답 처리 (토큰 만료 등)
+        if (response.code == 401) {
+            // 토큰 삭제
+            runBlocking { tokenStore.clear() }
+        }
+        
+        response
     }
 
     @Provides @Singleton

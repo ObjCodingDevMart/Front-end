@@ -38,13 +38,8 @@ import com.example.devmart.ui.theme.KakaoYellow
 import com.example.devmart.ui.theme.META_SIZE
 import com.example.devmart.ui.theme.PADDING_H
 import com.example.devmart.ui.theme.SOCIAL_HEIGHT
+import com.example.devmart.ui.auth.LoginUiState
 
-
-// --- UI State ---
-data class LoginUiState(
-    val isLoading: Boolean = false,
-    val error: String? = null
-)
 
 // --- Screen ---
 @Composable
