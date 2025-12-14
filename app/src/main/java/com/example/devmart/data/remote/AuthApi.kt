@@ -21,9 +21,29 @@ data class LoginResponse(
     val result: LoginResult
 )
 
-data class UserDto(val id: String, val email: String, val name: String?)
+// 백엔드 유저 정보 응답 구조
+data class OrderStatusCounts(
+    val PROCESSING: Int,
+    val COMPLETE: Int,
+    val CANCEL: Int
+)
+
+data class UserResult(
+    val usernickname: String,
+    val recentTotal: Int,
+    val maxMilege: Int,
+    val userLikeCnt: Int,
+    val orderStatusCounts: OrderStatusCounts
+)
+
+data class UserResponse(
+    val success: Boolean,
+    val code: String,
+    val message: String,
+    val result: UserResult
+)
 
 interface AuthApi {
     @POST("token/login") suspend fun loginWithKakao(@Body req: KakaoLoginRequest): LoginResponse
-    @GET("v1/auth/me") suspend fun me(): UserDto
+    @GET("user/me") suspend fun me(): UserResponse
 }
