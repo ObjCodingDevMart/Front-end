@@ -416,13 +416,16 @@ fun AppNav() {
             
             // 마이페이지 화면
             composable(Route.MyPage.path) {
+                val userViewModel: com.example.devmart.ui.user.UserViewModel = hiltViewModel()
+                val userState by userViewModel.uiState.collectAsState()
+                
                 UserScreen(
-                    nickname = "사용자",
-                    emailLocal = "user",
-                    emailDomain = "devmart.com",
-                    point = 1000,
-                    shippingCount = 2,
-                    likedCount = 5,
+                    nickname = userState.nickname.ifEmpty { "사용자" },
+                    emailLocal = userState.emailLocal.ifEmpty { "user" },
+                    emailDomain = userState.emailDomain.ifEmpty { "devmart.com" },
+                    point = userState.point,
+                    shippingCount = userState.shippingCount,
+                    likedCount = userState.likedCount,
                     onEditProfile = { /* TODO: 프로필 수정 */ },
                     onBackClick = { nav.navigate(Route.Home.path) {
                         popUpTo(Route.MainGraph.path) { inclusive = false }
