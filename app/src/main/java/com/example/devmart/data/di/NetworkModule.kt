@@ -28,7 +28,7 @@ object NetworkModule {
         val response = chain.proceed(req)
         
         // 401 Unauthorized 응답 처리 (토큰 만료 등)
-        if (response.code == 401) {
+        if (response.code == 401||response.code==500) {
             // 토큰 삭제
             runBlocking { tokenStore.clear() }
         }
