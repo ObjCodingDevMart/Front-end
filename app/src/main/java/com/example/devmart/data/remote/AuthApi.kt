@@ -5,7 +5,22 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 
 data class KakaoLoginRequest(val kakaoAccessToken: String)
-data class LoginResponse(val accessToken: String)
+
+// 백엔드 로그인 응답 구조
+data class LoginResult(
+    val accessToken: String,
+    val refreshToken: String,
+    val accessTokenExpiresIn: Long,
+    val refreshTokenExpiresIn: Long
+)
+
+data class LoginResponse(
+    val success: Boolean,
+    val code: String,
+    val message: String,
+    val result: LoginResult
+)
+
 data class UserDto(val id: String, val email: String, val name: String?)
 
 interface AuthApi {

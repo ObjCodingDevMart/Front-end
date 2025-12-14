@@ -39,7 +39,8 @@ class LoginViewModel @Inject constructor(
                 api.loginWithKakao(KakaoLoginRequest(kakaoAccessToken)) 
             }
                 .onSuccess { response ->
-                    tokenStore.save(response.accessToken)
+                    // accessToken만 저장 (refreshToken은 저장하지 않음)
+                    tokenStore.save(response.result.accessToken)
                     _uiState.value = _uiState.value.copy(isLoading = false)
                 }
                 .onFailure { error ->

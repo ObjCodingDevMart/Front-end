@@ -50,6 +50,24 @@ fun AppNav() {
     val session: SessionViewModel = hiltViewModel()
     val auth by session.auth.collectAsState()
 
+    // 인증 상태가 Unauthenticated로 변경되면 로그인 화면으로 이동 (토큰 만료 등)
+    LaunchedEffect(auth) {
+        if (auth is AuthState.Unauthenticated) {
+            val currentRoute = nav.currentDestination?.route
+            // 이미 로그인 화면이 아니고, 스플래시 화면도 아닌 경우에만 이동
+            if (currentRoute != null && 
+                currentRoute != Route.Login.path && 
+                currentRoute != Route.AuthGraph.path &&
+                currentRoute != Route.Splash.path) {
+                // 현재 경로를 저장하고 로그인 화면으로 이동
+                nav.currentBackStackEntry?.savedStateHandle?.set("previousRoute", currentRoute)
+                nav.navigate(Route.AuthGraph.path) {
+                    popUpTo(Route.Splash.path) { inclusive = false }
+                }
+            }
+        }
+    }
+
     NavHost(
         navController = nav,
         startDestination = Route.Splash.path
@@ -71,17 +89,41 @@ fun AppNav() {
 
         // 인증 그래프
         navigation(startDestination = Route.Login.path, route = Route.AuthGraph.path) {
-            composable(Route.Login.path) {
+            composable(Route.Login.path) { backStackEntry ->
                 val loginViewModel: LoginViewModel = hiltViewModel()
                 val loginState by loginViewModel.uiState.collectAsState()
                 val context = LocalContext.current
                 
-                // 로그인 상태 관찰 - 인증되면 MainGraph로 이동
+                // 로그인 전 경로 가져오기
+                val savedStateHandle = backStackEntry.savedStateHandle
+                val previousRoute = savedStateHandle.get<String>("previousRoute")
+                
+                // 로그인 상태 관찰 - 인증되면 원래 페이지로 이동
                 LaunchedEffect(auth) {
                     if (auth is AuthState.Authenticated) {
-                        nav.navigate(Route.MainGraph.path) { 
-                            popUpTo(Route.AuthGraph.path) { inclusive = true } 
+                        // 저장된 경로가 있으면 해당 경로로, 없으면 Home으로 이동
+                        val targetRoute = previousRoute?.takeIf { 
+                            it.isNotEmpty() && 
+                            it != Route.Login.path && 
+                            it != Route.AuthGraph.path &&
+                            it != Route.Splash.path
+                        } ?: Route.Home.path
+                        
+                        try {
+                            // 저장된 경로로 이동 시도
+                            nav.navigate(targetRoute) {
+                                popUpTo(Route.AuthGraph.path) { inclusive = true }
+                            }
+                        } catch (e: Exception) {
+                            // 경로가 유효하지 않으면 Home으로 이동
+                            Log.w("AppNav", "Invalid route: $targetRoute, navigating to Home", e)
+                            nav.navigate(Route.Home.path) {
+                                popUpTo(Route.AuthGraph.path) { inclusive = true }
+                            }
                         }
+                        
+                        // 사용 후 초기화
+                        savedStateHandle.remove<String>("previousRoute")
                     }
                 }
                 
