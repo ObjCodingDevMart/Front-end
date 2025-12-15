@@ -18,7 +18,7 @@ import javax.inject.Named
 
 @HiltViewModel
 class PaymentViewModel @Inject constructor(
-    @Suppress("unused") private val orderRepository: OrderRepository, // TODO: 실제 결제 연동 시 사용
+    private val orderRepository: OrderRepository,
     @Named("backend") retrofit: Retrofit
 ): ViewModel() {
 
@@ -115,44 +115,85 @@ class PaymentViewModel @Inject constructor(
         Log.d("PaymentViewModel", "Address updated: ${_address.value}")
     }
 
-    // 주문 생성 (결제) - 현재는 바로 성공 처리
-    @Suppress("UNUSED_PARAMETER")
+    // 여러 상품 주문 생성 (장바구니 결제)
+    fun createOrders(
+        products: List<OrderProduct>,
+        mileageToUse: Int = 0,
+        isBuyNow: Boolean = false
+    ) {
+        if (products.isEmpty()) {
+            _paymentState.value = PaymentState.Error(message = "주문할 상품이 없습니다.")
+            return
+        }
+        
+        viewModelScope.launch {
+            _paymentState.value = PaymentState.Loading
+            
+            var successCount = 0
+            var lastError: String? = null
+            
+            // 각 상품에 대해 순차적으로 주문 생성
+            // 첫 번째 상품에만 마일리지 적용
+            for ((index, product) in products.withIndex()) {
+                val itemId = product.id.toLongOrNull() ?: continue
+                val applyMileage = if (index == 0) mileageToUse else 0
+                
+                orderRepository.createOrder(
+                    itemId = itemId,
+                    quantity = product.qty,
+                    mileageToUse = applyMileage
+                ).onSuccess {
+                    successCount++
+                    Log.d("PaymentViewModel", "Order created for item: $itemId")
+                }.onFailure { error ->
+                    lastError = error.message
+                    Log.e("PaymentViewModel", "Failed to create order for item: $itemId", error)
+                }
+            }
+            
+            // 결과 처리
+            if (successCount == products.size) {
+                _paymentState.value = PaymentState.Success(
+                    message = "총 ${successCount}개 상품이 주문되었습니다."
+                )
+                if (!isBuyNow) { clearCart() }
+            } else if (successCount > 0) {
+                _paymentState.value = PaymentState.Success(
+                    message = "${successCount}/${products.size}개 상품이 주문되었습니다."
+                )
+                if (!isBuyNow) { clearCart() }
+            } else {
+                _paymentState.value = PaymentState.Error(
+                    message = lastError ?: "주문 처리 중 오류가 발생했습니다."
+                )
+            }
+        }
+    }
+    
+    // 단일 상품 주문 생성 (바로구매)
     fun createOrder(
         itemId: Long,
         quantity: Int,
         mileageToUse: Int = 0,
-        isBuyNow: Boolean = false  // 바로구매 여부
+        isBuyNow: Boolean = false
     ) {
         viewModelScope.launch {
             _paymentState.value = PaymentState.Loading
             
-            // 잠시 로딩 표시 후 성공 처리
-            kotlinx.coroutines.delay(1000)
-            
-            _paymentState.value = PaymentState.Success(
-                message = "주문이 정상적으로 완료되었습니다."
-            )
-            
-            // 장바구니에서 결제한 경우에만 장바구니 초기화
-            if (!isBuyNow) {
-                clearCart()
+            orderRepository.createOrder(
+                itemId = itemId,
+                quantity = quantity,
+                mileageToUse = mileageToUse
+            ).onSuccess { response ->
+                _paymentState.value = PaymentState.Success(
+                    message = response.message.ifEmpty { "주문이 정상적으로 완료되었습니다." }
+                )
+                if (!isBuyNow) { clearCart() }
+            }.onFailure { error ->
+                _paymentState.value = PaymentState.Error(
+                    message = error.message ?: "결제 처리 중 오류가 발생했습니다."
+                )
             }
-            
-            // TODO: 실제 결제 연동 시 아래 코드 사용
-            // orderRepository.createOrder(
-            //     itemId = itemId,
-            //     quantity = quantity,
-            //     mileageToUse = mileageToUse
-            // ).onSuccess { response ->
-            //     _paymentState.value = PaymentState.Success(
-            //         message = response.message.ifEmpty { "주문이 정상적으로 완료되었습니다." }
-            //     )
-            //     if (!isBuyNow) { clearCart() }
-            // }.onFailure { error ->
-            //     _paymentState.value = PaymentState.Error(
-            //         message = error.message ?: "결제 처리 중 오류가 발생했습니다."
-            //     )
-            // }
         }
     }
 

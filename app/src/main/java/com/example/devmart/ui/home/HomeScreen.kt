@@ -160,10 +160,10 @@ fun ImageSliderBanner() {
     // 배너 이미지 URL 리스트 (나중에 ViewModel이나 API에서 가져올 수 있음)
     val bannerImages = remember {
         listOf(
-            "https://via.placeholder.com/400x280/1976D2/FFFFFF?text=Banner+1",
-            "https://via.placeholder.com/400x280/388E3C/FFFFFF?text=Banner+2",
-            "https://via.placeholder.com/400x280/F57C00/FFFFFF?text=Banner+3",
-            "https://via.placeholder.com/400x280/7B1FA2/FFFFFF?text=Banner+4"
+            "https://codashap-s3-coda.s3.ap-northeast-2.amazonaws.com/banner1.png",
+            "https://codashap-s3-coda.s3.ap-northeast-2.amazonaws.com/banner4.png",
+            "https://codashap-s3-coda.s3.ap-northeast-2.amazonaws.com/banner3.png",
+            "https://codashap-s3-coda.s3.ap-northeast-2.amazonaws.com/banner2.png"
         )
     }
     

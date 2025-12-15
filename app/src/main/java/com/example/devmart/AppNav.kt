@@ -317,14 +317,23 @@ fun AppNav() {
                         paymentViewModel.updateMyAddress(address)
                     },
                     onClickPayment = { mileageToUse ->
-                        // 첫 번째 상품으로 주문 생성 (여러 상품은 추후 확장)
-                        val firstProduct = products.firstOrNull()
-                        if (firstProduct != null) {
-                            paymentViewModel.createOrder(
-                                itemId = firstProduct.id.toLongOrNull() ?: 0L,
-                                quantity = firstProduct.qty,
+                        if (isBuyNow) {
+                            // 바로구매: 단일 상품 주문
+                            val product = products.firstOrNull()
+                            if (product != null) {
+                                paymentViewModel.createOrder(
+                                    itemId = product.id.toLongOrNull() ?: 0L,
+                                    quantity = product.qty,
+                                    mileageToUse = mileageToUse,
+                                    isBuyNow = true
+                                )
+                            }
+                        } else {
+                            // 장바구니 결제: 여러 상품 주문
+                            paymentViewModel.createOrders(
+                                products = products,
                                 mileageToUse = mileageToUse,
-                                isBuyNow = isBuyNow  // 바로구매 여부 전달
+                                isBuyNow = false
                             )
                         }
                     },
