@@ -1,32 +1,55 @@
 package com.example.devmart.ui.wishlist
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.clickable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.devmart.ui.component.BottomNavigationBar
 import com.example.devmart.ui.component.BottomNavItem
-import com.example.devmart.ui.theme.*
+import com.example.devmart.ui.theme.DevBlack
+import com.example.devmart.ui.theme.DevDarkgray
+import com.example.devmart.ui.theme.DevDarkneyvy
+import com.example.devmart.ui.theme.DevGray
+import com.example.devmart.ui.theme.DevMartTheme
+import com.example.devmart.ui.theme.DevWhite
 
 
 data class WishlistItemUi(
     val id: Long,
     val brand: String,
     val name: String,
-    val price: String
+    val price: String,
+    val imageUrl: String? = null
 )
 
 data class WishlistScreenState(
@@ -129,7 +152,7 @@ fun WishlistTopBar(
             // 왼쪽 Back
             IconButton(onClick = onBackClick) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
                     tint = DevBlack
                 )
@@ -148,7 +171,7 @@ fun WishlistTopBar(
             // 오른쪽 빈 아이콘 (중앙 정렬 맞추기용)
             IconButton(onClick = { }) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = null,
                     tint = DevWhite.copy(alpha = 0f)
                 )
@@ -179,8 +202,18 @@ private fun WishlistProductItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(0.8f)
-                .background(DevGray)
-        )
+                .background(DevGray),
+            contentAlignment = Alignment.Center
+        ) {
+            if (!item.imageUrl.isNullOrEmpty()) {
+                AsyncImage(
+                    model = item.imageUrl,
+                    contentDescription = item.name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
 
         Spacer(Modifier.height(8.dp))
 

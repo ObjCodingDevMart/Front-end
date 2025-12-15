@@ -21,10 +21,20 @@ object NetworkModule {
     @Provides @Singleton
     fun authInterceptor(tokenStore: TokenStore): Interceptor = Interceptor { chain ->
         val token = runBlocking { tokenStore.snapshot() }
+        android.util.Log.d("AuthToken", "Current token: $token")
         val req = if (!token.isNullOrBlank())
             chain.request().newBuilder().addHeader("Authorization", "Bearer $token").build()
         else chain.request()
-        chain.proceed(req)
+        
+        val response = chain.proceed(req)
+        
+        // 401 Unauthorized 응답 처리 (토큰 만료 등)
+        if (response.code == 401) {
+            // 토큰 삭제
+            runBlocking { tokenStore.clear() }
+        }
+        
+        response
     }
 
     @Provides @Singleton

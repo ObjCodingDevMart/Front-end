@@ -1,22 +1,48 @@
 package com.example.devmart.ui.order
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
 import com.example.devmart.ui.component.BottomNavigationBar
 import com.example.devmart.ui.component.BottomNavItem
-import com.example.devmart.ui.theme.*
+import com.example.devmart.ui.theme.DevBlack
+import com.example.devmart.ui.theme.DevDarkgray
+import com.example.devmart.ui.theme.DevDarkneyvy
+import com.example.devmart.ui.theme.DevFonts
+import com.example.devmart.ui.theme.DevGray
+import com.example.devmart.ui.theme.DevWhite
 
 //model
 data class OrderHistoryUiState(
@@ -30,10 +56,13 @@ data class OrderGroupUi(
 
 data class OrderSummaryUi(
     val orderId: String,
+    val itemId: Long,          // 리뷰 작성에 필요
     val brandName: String,
     val productName: String,
     val optionText: String,
-    val priceText: String
+    val priceText: String,
+    val price: Int = 0,        // 리뷰 작성에 필요
+    val imagePath: String? = null  // 리뷰 작성에 필요
 )
 
 //screen
@@ -43,10 +72,11 @@ fun OrderHistoryScreen(
     onBack: () -> Unit = {},
     onBottomNavClick: (String) -> Unit = {},
     onReorder: (OrderSummaryUi) -> Unit = {},
+    onWriteReview: (OrderSummaryUi) -> Unit = {},
 ) {
     Scaffold(
         topBar = {
-            OrderHistoryTopBar(onBackClick = onBack)
+                OrderHistoryTopBar(onBackClick = onBack)
         },
         bottomBar = {
             BottomNavigationBar(
@@ -63,7 +93,8 @@ fun OrderHistoryScreen(
                 .fillMaxSize()
                 .background(DevWhite),
             uiState = uiState,
-            onReorder = onReorder
+            onReorder = onReorder,
+            onWriteReview = onWriteReview
         )
     }
 }
@@ -71,14 +102,14 @@ fun OrderHistoryScreen(
 private fun OrderHistoryContent(
     modifier: Modifier,
     uiState: OrderHistoryUiState,
-    onReorder: (OrderSummaryUi) -> Unit
+    onReorder: (OrderSummaryUi) -> Unit,
+    onWriteReview: (OrderSummaryUi) -> Unit
 ) {
     Column(
         modifier = modifier
             .padding(horizontal = 20.dp)
             .verticalScroll(rememberScrollState())
     ) {
-
         Spacer(Modifier.height(16.dp))
 
         DevMartHeader()
@@ -87,37 +118,40 @@ private fun OrderHistoryContent(
 
         OrderHistoryList(
             orderGroups = uiState.orderGroups,
-            onReorder = onReorder
+            onReorder = onReorder,
+            onWriteReview = onWriteReview
         )
     }
 }
 @Composable
 private fun DevMartHeader() {
-    Text(
-        text = "Dev Mart",
-        fontFamily = DevFonts.KakaoBigSans,
-        fontWeight = FontWeight.ExtraBold,
-        fontSize = 20.sp,
-        color = DevDarkneyvy
-    )
+                Text(
+                    text = "Dev Mart",
+                    fontFamily = DevFonts.KakaoBigSans,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 20.sp,
+                    color = DevDarkneyvy
+                )
 
-    Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(4.dp))
 
-    HorizontalDivider(
-        modifier = Modifier.fillMaxWidth(),
-        color = DevDarkneyvy.copy(alpha = 0.8f),
-        thickness = 1.dp
-    )
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = DevDarkneyvy.copy(alpha = 0.8f),
+                    thickness = 1.dp
+                )
 }
 @Composable
 private fun OrderHistoryList(
     orderGroups: List<OrderGroupUi>,
-    onReorder: (OrderSummaryUi) -> Unit
+    onReorder: (OrderSummaryUi) -> Unit,
+    onWriteReview: (OrderSummaryUi) -> Unit
 ) {
     orderGroups.forEach { group ->
         OrderGroupSection(
             group = group,
-            onReorder = onReorder
+            onReorder = onReorder,
+            onWriteReview = onWriteReview
         )
         Spacer(Modifier.height(24.dp))
     }
@@ -126,7 +160,8 @@ private fun OrderHistoryList(
 @Composable
 private fun OrderGroupSection(
     group: OrderGroupUi,
-    onReorder: (OrderSummaryUi) -> Unit
+    onReorder: (OrderSummaryUi) -> Unit,
+    onWriteReview: (OrderSummaryUi) -> Unit
 ) {
     Text(
         text = group.orderDateLabel,
@@ -141,7 +176,8 @@ private fun OrderGroupSection(
     group.items.forEach { item ->
         OrderSummaryCard(
             item = item,
-            onReorder = { onReorder(item) }
+            onReorder = { onReorder(item) },
+            onWriteReview = { onWriteReview(item) }
         )
         Spacer(Modifier.height(16.dp))
     }
@@ -197,6 +233,7 @@ private fun OrderHistoryTopBar(
 fun OrderSummaryCard(
     item: OrderSummaryUi,
     onReorder: () -> Unit,
+    onWriteReview: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -205,27 +242,35 @@ fun OrderSummaryCard(
         shape = RoundedCornerShape(8.dp),
         shadowElevation = 0.dp
     ) {
-
         Column(
-            modifier = Modifier
-                .padding(12.dp)
+            modifier = Modifier.padding(12.dp)
         ) {
-
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-
-                Box(
-                    modifier = Modifier
-                        .size(88.dp)
-                        .background(DevGray, RoundedCornerShape(8.dp))
-                )
+                // 상품 이미지
+                if (item.imagePath != null) {
+                    Image(
+                        painter = rememberAsyncImagePainter(item.imagePath),
+                        contentDescription = item.productName,
+                        modifier = Modifier
+                            .size(88.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(DevGray),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(88.dp)
+                            .background(DevGray, RoundedCornerShape(8.dp))
+                    )
+                }
 
                 Spacer(Modifier.width(12.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-
                     Text(
                         text = item.brandName,
                         fontFamily = DevFonts.KakaoBigSans,
@@ -269,20 +314,47 @@ fun OrderSummaryCard(
 
             Spacer(Modifier.height(12.dp))
 
-            OutlinedButton(
-                onClick = onReorder,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(40.dp),
-                shape = RoundedCornerShape(6.dp)
+            // 버튼 Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = "재구매",
-                    fontFamily = DevFonts.KakaoBigSans,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
-                    color = DevBlack
-                )
+                // 리뷰 작성 버튼
+                Button(
+                    onClick = onWriteReview,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp),
+                    shape = RoundedCornerShape(6.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = DevDarkneyvy,
+                        contentColor = DevWhite
+                    )
+                ) {
+                    Text(
+                        text = "리뷰 작성",
+                        fontFamily = DevFonts.KakaoBigSans,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                }
+                
+                // 재구매 버튼
+                OutlinedButton(
+                    onClick = onReorder,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Text(
+                        text = "재구매",
+                        fontFamily = DevFonts.KakaoBigSans,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = DevBlack
+                    )
+                }
             }
         }
     }
@@ -295,10 +367,12 @@ private fun previewState() = OrderHistoryUiState(
             items = listOf(
                 OrderSummaryUi(
                     orderId = "1",
+                    itemId = 1L,
                     brandName = "Dev",
                     productName = "황금 마우스",
                     optionText = "BLACK / 1개",
-                    priceText = "166,500원"
+                    priceText = "166,500원",
+                    price = 166500
                 )
             )
         )
@@ -332,17 +406,21 @@ private fun PreviewOrderHistoryScreen() {
                         items = listOf(
                             OrderSummaryUi(
                                 orderId = "1",
+                                itemId = 1L,
                                 brandName = "Dev",
                                 productName = "황금 마우스",
                                 optionText = "BLACK / 1개",
-                                priceText = "166,500원"
+                                priceText = "166,500원",
+                                price = 166500
                             ),
                             OrderSummaryUi(
                                 orderId = "2",
+                                itemId = 2L,
                                 brandName = "커먼유니크",
                                 productName = "보이 크롭 반팔티셔츠",
                                 optionText = "그레이 / L / 1개",
-                                priceText = "29,690원"
+                                priceText = "29,690원",
+                                price = 29690
                             )
                         )
                     )

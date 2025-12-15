@@ -2,9 +2,20 @@ package com.example.devmart.ui.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,37 +28,43 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.devmart.ui.component.BottomNavigationBar
 import com.example.devmart.ui.component.BottomNavItem
-import com.example.devmart.ui.theme.*
+import com.example.devmart.ui.theme.DevBlack
+import com.example.devmart.ui.theme.DevDarkgray
+import com.example.devmart.ui.theme.DevDarkneyvy
+import com.example.devmart.ui.theme.DevFonts
+import com.example.devmart.ui.theme.DevGray
+import com.example.devmart.ui.theme.DevMartTheme
+import com.example.devmart.ui.theme.DevWhite
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun <T> Top100SearchScreen(
-    products: List<T>,
+    allProducts: List<T>,
     productCard: @Composable (T) -> Unit,
     currentRoute: String,
     onBottomNavClick: (String) -> Unit,
-
-    // 동적 데이터로 변경됨
     recentSearches: List<String>,
     popularKeywords: List<String>,
-
     modifier: Modifier = Modifier,
-    onSearchSubmit: (String) -> Unit = {},
+    searchResults: List<T> = emptyList(),
+    query: String = "",
+    onQueryChange: (String) -> Unit = {},
+    onClearQuery: () -> Unit = {},
+    onSearchSubmit: () -> Unit = {},
     onKeywordClick: (String) -> Unit = {}
 ) {
-    var query by remember { mutableStateOf("") }
+    val hasSearchResults = query.isNotEmpty() && searchResults.isNotEmpty()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -69,7 +86,7 @@ fun <T> Top100SearchScreen(
                 ) {
                     TextField(
                         value = query,
-                        onValueChange = { query = it },
+                        onValueChange = onQueryChange,
                         modifier = Modifier.weight(1f),
                         placeholder = {
                             Text(
@@ -99,7 +116,7 @@ fun <T> Top100SearchScreen(
                         )
                     )
 
-                    IconButton(onClick = { onSearchSubmit(query) }) {
+                    IconButton(onClick = onSearchSubmit) {
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = "검색",
@@ -111,7 +128,7 @@ fun <T> Top100SearchScreen(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 // X 버튼: 검색창 비우기
-                IconButton(onClick = { query = "" }) {
+                IconButton(onClick = onClearQuery) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "검색창 비우기",
@@ -138,6 +155,7 @@ fun <T> Top100SearchScreen(
         ) {
 
             // ----- 최근 검색어 -----
+            if (recentSearches.isNotEmpty()) {
             item {
                 Text(
                     text = "최근 검색어",
@@ -149,16 +167,17 @@ fun <T> Top100SearchScreen(
             }
 
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    recentSearches.forEach {
-                        Text(
-                            text = it,
-                            fontSize = 13.sp,
-                            color = DevBlack,
-                            fontFamily = DevFonts.KakaoBigSans,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        recentSearches.forEach { keyword ->
+                            KeywordChip(
+                                label = keyword,
+                                onClick = { onKeywordClick(keyword) },
+                                backgroundColor = DevDarkneyvy.copy(alpha = 0.15f)
+                            )
+                        }
                     }
                 }
             }
@@ -185,6 +204,43 @@ fun <T> Top100SearchScreen(
                 }
             }
 
+            // ----- 검색 결과 -----
+            if (hasSearchResults) {
+                item {
+                    Text(
+                        text = "검색 결과 (${searchResults.size}개)",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = DevDarkneyvy,
+                        fontFamily = DevFonts.KakaoBigSans
+                    )
+                }
+
+                val searchRows = searchResults.chunked(3)
+                items(searchRows) { rowItems ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        rowItems.forEach { product ->
+                            Box(modifier = Modifier.weight(1f)) {
+                                productCard(product)
+                            }
+                        }
+                        if (rowItems.size < 3) {
+                            repeat(3 - rowItems.size) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
+                
+                // 검색 결과와 TOP 100 사이 구분선
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+
             // ----- TOP 100 -----
             item {
                 Text(
@@ -197,7 +253,7 @@ fun <T> Top100SearchScreen(
             }
 
             // ----- 3열 상품 카드 -----
-            val rows = products.chunked(3)
+            val rows = allProducts.chunked(3)
             items(rows) { rowItems ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -222,14 +278,15 @@ fun <T> Top100SearchScreen(
 @Composable
 private fun KeywordChip(
     label: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    backgroundColor: Color = DevGray.copy(alpha = 0.4f)
 ) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(DevGray.copy(alpha = 0.4f))
+            .background(backgroundColor)
             .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 6.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -288,12 +345,18 @@ fun Top100SearchScreenPreview() {
         val dummyProducts = List(12) { "dummy-$it" }
 
         Top100SearchScreen(
-            products = dummyProducts,
+            allProducts = dummyProducts,
             productCard = { DummyProductCard() },
             currentRoute = BottomNavItem.Top100.route,
             onBottomNavClick = {},
             recentSearches = listOf("AI", "Kotlin", "Compose"),
-            popularKeywords = listOf("키보드", "노트북", "의자", "마이크")
+            popularKeywords = listOf("키보드", "노트북", "의자", "마이크"),
+            searchResults = listOf("result-1", "result-2"),
+            query = "검색어",
+            onQueryChange = {},
+            onClearQuery = {},
+            onSearchSubmit = {},
+            onKeywordClick = {}
         )
     }
 }

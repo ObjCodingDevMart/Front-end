@@ -28,9 +28,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.devmart.ui.component.BackButton
 import com.example.devmart.ui.component.OrderItemCard
 import com.example.devmart.ui.component.OrderItemMode
@@ -38,8 +39,6 @@ import com.example.devmart.ui.theme.DevDarkneyvy
 import com.example.devmart.ui.theme.DevFonts
 import com.example.devmart.ui.theme.DevMartTheme
 import com.example.devmart.ui.theme.DevWhite
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 
 // ----------------------- 데이터 클래스 -----------------------
 
@@ -64,14 +63,53 @@ data class Address(
 fun PaymentScreen(
     address: Address = Address(),
     products: List<OrderProduct> = emptyList(),
+    availableMileage: Int = 0,
+    paymentState: PaymentState = PaymentState.Idle,
+    isBuyNow: Boolean = false,
     onBackClick: () -> Unit = {},
     onNavigateToAddressSearch: () -> Unit = {},
     onSaveAddress: (Address) -> Unit = {},
-    onClickPayment: () -> Unit = {}
+    onClickPayment: (mileageToUse: Int) -> Unit = {},
+    onPaymentComplete: () -> Unit = {},
+    onResetPaymentState: () -> Unit = {}
 ) {
     val totalPrice = products.sumOf { it.price * it.qty }
     val deliveryFee = if (products.isEmpty()) 0 else 3000
     val finalAmount = totalPrice + deliveryFee
+    
+    // 바로구매일 경우 결제 모달 자동 표시
+    var showPaymentDialog by remember { mutableStateOf(isBuyNow) }
+    
+    // isBuyNow가 변경되면 다이얼로그 상태 업데이트
+    LaunchedEffect(isBuyNow) {
+        if (isBuyNow) {
+            showPaymentDialog = true
+        }
+    }
+    
+    // 결제 모달
+    if (showPaymentDialog) {
+        PaymentConfirmDialog(
+            products = products,
+            totalAmount = totalPrice,
+            deliveryFee = deliveryFee,
+            availableMileage = availableMileage,
+            address = address,
+            paymentState = paymentState,
+            onConfirm = { mileageToUse ->
+                onClickPayment(mileageToUse)
+            },
+            onDismiss = {
+                showPaymentDialog = false
+                onResetPaymentState()
+            },
+            onNavigateToHome = {
+                showPaymentDialog = false
+                onResetPaymentState()
+                onPaymentComplete()
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -129,7 +167,7 @@ fun PaymentScreen(
 
         // ------------------ 결제 버튼 ------------------
         Button(
-            onClick = onClickPayment,
+            onClick = { showPaymentDialog = true },
             colors = ButtonDefaults.buttonColors(
                 containerColor = DevDarkneyvy,
                 contentColor = DevWhite
@@ -158,14 +196,17 @@ fun DeliveryInfoBox(
 
     // 외부에서 address가 변경되면 내부 상태도 동기화
     LaunchedEffect(address.postalCode, address.roadAddress) {
+        android.util.Log.d("DeliveryInfoBox", "LaunchedEffect: postalCode=${address.postalCode}, roadAddress=${address.roadAddress}")
         postal = address.postalCode
         road = address.roadAddress
     }
+    
+    android.util.Log.d("DeliveryInfoBox", "Render: postal=$postal, road=$road, address.postal=${address.postalCode}")
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp))
+            .background(DevWhite, RoundedCornerShape(12.dp))
             .padding(16.dp)
     ) {
         Text(
@@ -233,7 +274,7 @@ fun DeliveryInfoBox(
                         Address(
                             postalCode = postal,
                             roadAddress = road,
-                            jibunAddress = address.jibunAddress, // 그대로 유지
+                            jibunAddress = address.jibunAddress,
                             detail = detail
                         )
                     )
@@ -258,7 +299,7 @@ fun PriceSummaryBox(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFE9E9E9), RoundedCornerShape(12.dp))
+            .background(DevWhite, RoundedCornerShape(12.dp))
             .padding(16.dp)
     ) {
         PriceRow(label = "상품금액", value = productPrice)
@@ -305,7 +346,8 @@ fun PreviewPaymentScreen() {
             products = listOf(
                 OrderProduct("1", "게이밍 키보드", "청축 스위치 / RGB", 99000, 1),
                 OrderProduct("2", "게이밍 마우스", "16000 DPI / 블랙", 59000, 2)
-            )
+            ),
+            availableMileage = 5000
         )
     }
 }

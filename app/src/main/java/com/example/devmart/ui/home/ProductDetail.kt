@@ -1,56 +1,100 @@
 package com.example.devmart.ui.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.material.icons.Icons
-
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Devices
 import com.example.devmart.R
-import java.util.Locale
 import com.example.devmart.domain.model.Product
 import com.example.devmart.domain.model.Review
 import com.example.devmart.ui.component.BackButton
-import com.example.devmart.ui.theme.*
+import com.example.devmart.ui.theme.DevBlack
+import com.example.devmart.ui.theme.DevDarkgray
+import com.example.devmart.ui.theme.DevGray
+import com.example.devmart.ui.theme.DevMartTheme
+import com.example.devmart.ui.theme.DevNeyvy
+import com.example.devmart.ui.theme.DevWhite
+import com.example.devmart.ui.theme.PADDING_H
+import java.util.Locale
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailScreen(
     product: Product? = null,
+    reviews: List<Review> = emptyList(),
+    isReviewLoading: Boolean = false,
+    isLiked: Boolean = false,
+    likeMessage: String? = null,
+    cartMessage: String? = null,
     onBackClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     onLikeClick: () -> Unit = {},
+    onClearLikeMessage: () -> Unit = {},
     onAddToCart: () -> Unit = {},
+    onClearCartMessage: () -> Unit = {},
     onBuyNow: () -> Unit = {}
 ) {
     // 임시 데이터 (실제로는 파라미터로 받아야 함)
@@ -62,12 +106,39 @@ fun ProductDetailScreen(
         imageUrl = null
     )
     
-    var isLiked by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableIntStateOf(0) }
     
     val tabs = listOf("상품 상세", "구매 안내", "리뷰")
     
+    // 스낵바
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    // 좋아요 메시지 처리
+    LaunchedEffect(likeMessage) {
+        likeMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            onClearLikeMessage()
+        }
+    }
+    
+    // 장바구니 메시지 처리
+    LaunchedEffect(cartMessage) {
+        cartMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            onClearCartMessage()
+        }
+    }
+    
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = DevBlack,
+                    contentColor = DevWhite
+                )
+            }
+        },
         topBar = {
             TopAppBar(
                 title = {
@@ -101,10 +172,7 @@ fun ProductDetailScreen(
         bottomBar = {
             BottomActionBar(
                 isLiked = isLiked,
-                onLikeClick = {
-                    isLiked = !isLiked
-                    onLikeClick()
-                },
+                onLikeClick = onLikeClick,
                 onAddToCart = onAddToCart,
                 onBuyNow = onBuyNow
             )
@@ -145,6 +213,10 @@ fun ProductDetailScreen(
             TabContent(
                 selectedTab = selectedTab,
                 productId = displayProduct.id,
+                detailImageUrl = displayProduct.detailImageUrl,
+                detailContent = displayProduct.detailContent,
+                reviews = reviews,
+                isReviewLoading = isReviewLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = PADDING_H, vertical = 16.dp)
@@ -342,18 +414,10 @@ fun TabItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    @Suppress("UNUSED_VARIABLE")
-    val isPressed by interactionSource.collectIsPressedAsState()
-    
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(
-                onClick = onClick,
-                interactionSource = interactionSource,
-                indication = null
-            )
+            .clickable(onClick = onClick)
             .padding(vertical = 16.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -371,6 +435,10 @@ fun TabItem(
 fun TabContent(
     selectedTab: Int,
     productId: String,
+    detailImageUrl: String?,
+    detailContent: String?,
+    reviews: List<Review> = emptyList(),
+    isReviewLoading: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -381,7 +449,10 @@ fun TabContent(
         when (selectedTab) {
             0 -> {
                 // 상품 상세
-                ProductDetailContent()
+                ProductDetailContent(
+                    detailImageUrl = detailImageUrl,
+                    detailContent = detailContent
+                )
             }
             1 -> {
                 // 구매 안내
@@ -389,7 +460,11 @@ fun TabContent(
             }
             2 -> {
                 // 리뷰
-                ReviewSection(productId = productId)
+                ReviewSection(
+                    productId = productId,
+                    reviews = reviews,
+                    isLoading = isReviewLoading
+                )
             }
         }
     }
@@ -397,42 +472,52 @@ fun TabContent(
 
 @Composable
 fun ProductDetailContent(
+    detailImageUrl: String?,
+    detailContent: String?,
     modifier: Modifier = Modifier
 ) {
-    @Suppress("UNUSED_VARIABLE")
-    val scrollState = rememberScrollState()
-    
     Column(
         modifier = modifier
             .fillMaxWidth()
     ) {
-        // 상품 상세 이미지 영역 (img.png)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(DevGray.copy(alpha = 0.1f)),
-            contentAlignment = Alignment.Center
-        ) {
-            // drawable에서 이미지 로드
-            Image(
-                painter = painterResource(id = R.drawable.img),
+        // 상품 상세 이미지 영역
+        if (!detailImageUrl.isNullOrEmpty()) {
+            AsyncImage(
+                model = detailImageUrl,
                 contentDescription = "상품 상세 이미지",
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(),
-                contentScale = ContentScale.Fit
+                    .fillMaxWidth(),
+                contentScale = ContentScale.FillWidth
             )
+        } else {
+            // detailImageUrl이 없으면 기본 이미지 표시
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(DevGray.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.img),
+                    contentDescription = "상품 상세 이미지",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(),
+                    contentScale = ContentScale.Fit
+                )
+            }
         }
         
         Spacer(modifier = Modifier.height(16.dp))
         
         // 상품 정보 텍스트
-        ProductDetailInfo()
+        ProductDetailInfo(detailContent = detailContent)
     }
 }
 
 @Composable
 fun ProductDetailInfo(
+    detailContent: String?,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -449,29 +534,7 @@ fun ProductDetailInfo(
         )
         
         Text(
-            text = """
-                • 제품명: fkqlt iphone 케이스
-                • 브랜드: fkqlt
-                • 재질: 실리콘 소재로 제작된 고품질 케이스
-                • 색상: 다양한 색상 옵션 제공
-                • 호환 모델: iPhone 14, iPhone 14 Pro, iPhone 15, iPhone 15 Pro
-                
-                [제품 특징]
-                - 충격 흡수력이 뛰어난 실리콘 소재
-                - 미끄럼 방지 처리로 안전한 사용
-                - 카메라 렌즈 보호 기능
-                - 얇고 가벼운 디자인으로 휴대성 우수
-                
-                [사용 방법]
-                1. 스마트폰 뒷면을 깨끗이 닦아주세요
-                2. 케이스를 스마트폰에 맞게 끼워주세요
-                3. 가장자리가 잘 맞는지 확인해주세요
-                
-                [주의사항]
-                - 직사광선을 피해 보관해주세요
-                - 화학 용품과의 접촉을 피해주세요
-                - 정기적으로 청소해주세요
-            """.trimIndent(),
+            text = detailContent ?: "상품 상세 정보가 없습니다.",
             fontSize = 14.sp,
             color = DevBlack,
             lineHeight = 22.sp
@@ -572,70 +635,12 @@ fun GuideSection(
 @Composable
 fun ReviewSection(
     @Suppress("UNUSED_PARAMETER") productId: String,
+    reviews: List<Review> = emptyList(),
+    isLoading: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    // 더미 리뷰 데이터
-    val reviews = remember {
-        listOf(
-            Review(
-                id = "1",
-                userId = "user1",
-                userName = "김**",
-                rating = 5,
-                content = "정말 만족스러운 제품이에요! 품질도 좋고 배송도 빠르네요. 다음에도 또 구매할게요.",
-                date = "2024.11.05",
-                images = listOf()
-            ),
-            Review(
-                id = "2",
-                userId = "user2",
-                userName = "이**",
-                rating = 4,
-                content = "가격 대비 괜찮은 것 같아요. 다만 색상이 사진보다 조금 다르게 보이긴 해요.",
-                date = "2024.11.03",
-                images = listOf()
-            ),
-            Review(
-                id = "3",
-                userId = "user3",
-                userName = "박**",
-                rating = 5,
-                content = "완벽해요! 디자인도 예쁘고 실용적이에요. 추천합니다!",
-                date = "2024.11.01",
-                images = listOf()
-            ),
-            Review(
-                id = "4",
-                userId = "user4",
-                userName = "최**",
-                rating = 3,
-                content = "무난한 제품이에요. 특별히 좋거나 나쁘지는 않네요.",
-                date = "2024.10.28",
-                images = listOf()
-            ),
-            Review(
-                id = "5",
-                userId = "user5",
-                userName = "정**",
-                rating = 5,
-                content = "친구 추천으로 샀는데 정말 좋아요! 가성비 최고예요. 배송도 빠르고 포장도 깔끔했어요.",
-                date = "2024.10.25",
-                images = listOf()
-            ),
-            Review(
-                id = "6",
-                userId = "user6",
-                userName = "강**",
-                rating = 4,
-                content = "전반적으로 만족스러워요. 다만 사이즈가 생각보다 작을 수 있으니 참고하세요.",
-                date = "2024.10.20",
-                images = listOf()
-            )
-        )
-    }
-    
     // 리뷰 통계
-    val averageRating = reviews.map { it.rating }.average()
+    val averageRating = if (reviews.isNotEmpty()) reviews.map { it.rating }.average() else 0.0
     val totalReviews = reviews.size
     
     Column(modifier = modifier.fillMaxWidth()) {
@@ -648,16 +653,38 @@ fun ReviewSection(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // 리뷰 목록
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            reviews.forEach { review ->
-                ReviewItem(
-                    review = review,
-                    modifier = Modifier.fillMaxWidth()
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = DevNeyvy)
+            }
+        } else if (reviews.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "아직 리뷰가 없습니다.",
+                    color = DevGray,
+                    fontSize = 14.sp
                 )
+            }
+        } else {
+            // 리뷰 목록
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                reviews.forEach { review ->
+                    ReviewItem(
+                        review = review,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }
@@ -725,31 +752,31 @@ fun ReviewItem(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // 리뷰 헤더 (작성자, 별점, 날짜)
+            // 리뷰 헤더 (별점 + 작성자)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        text = review.userName,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = DevBlack
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     StarRating(
                         rating = review.rating,
                         modifier = Modifier
                     )
+                    
+                    // 마스킹된 사용자 이름 표시
+                    review.userName?.let { name ->
+                        Text(
+                            text = maskUserName(name),
+                            fontSize = 13.sp,
+                            color = DevDarkgray,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
-                
-                Text(
-                    text = review.date,
-                    fontSize = 12.sp,
-                    color = DevDarkgray
-                )
             }
             
             Spacer(modifier = Modifier.height(12.dp))
@@ -763,25 +790,34 @@ fun ReviewItem(
             )
             
             // 리뷰 이미지가 있는 경우
-            review.images?.takeIf { it.isNotEmpty() }?.let { images ->
+            review.imgUrl?.let { imageUrl ->
                 Spacer(modifier = Modifier.height(12.dp))
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(images) { imageUrl ->
-                        AsyncImage(
-                            model = imageUrl,
-                            contentDescription = "리뷰 이미지",
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-                }
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = "리뷰 이미지",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
             }
         }
     }
+}
+
+/**
+ * 사용자 이름 마스킹 처리
+ * 첫 글자만 보여주고 나머지는 *로 대체
+ * 예: "홍길동" -> "홍**", "John" -> "J***"
+ */
+private fun maskUserName(name: String): String {
+    if (name.isEmpty()) return ""
+    if (name.length == 1) return name
+    
+    val firstChar = name.first()
+    val maskedPart = "*".repeat(name.length - 1)
+    return "$firstChar$maskedPart"
 }
 
 @Composable

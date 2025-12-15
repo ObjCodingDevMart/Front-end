@@ -1,9 +1,16 @@
 package com.example.devmart.data.mapper
 
-import com.example.devmart.data.remote.ProductDto
-import com.example.devmart.data.remote.UserDto
+import com.example.devmart.data.remote.ItemDto
 import com.example.devmart.domain.model.Product
-import com.example.devmart.domain.model.User
 
-fun UserDto.toDomain() = User(id, email, name)
-fun ProductDto.toDomain() = Product(id, brand , title, price, imageUrl)
+fun ItemDto.toDomain() = Product(
+    id = itemId?.toString() ?: "",
+    brand = brand,
+    title = itemName,
+    price = price.toLong(),
+    imageUrl = imagePath,
+    categories = categories,
+    detailImageUrl = productDetailImgUrl,
+    detailContent = productDetailContent,
+    isNew = isNew
+)

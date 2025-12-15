@@ -1,62 +1,88 @@
 package com.example.devmart.ui.home
 
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import kotlinx.coroutines.delay
 import com.example.devmart.domain.model.Product
 import com.example.devmart.ui.component.BottomNavigationBar
 import com.example.devmart.ui.component.ProductCard
+import com.example.devmart.ui.theme.DevBlack
+import com.example.devmart.ui.theme.DevGray
 import com.example.devmart.ui.theme.DevMartTheme
-
-import com.example.devmart.ui.theme.*
+import com.example.devmart.ui.theme.DevNeyvy
+import com.example.devmart.ui.theme.DevWhite
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    products: List<Product> = emptyList(),
+    categories: List<String> = emptyList(),
+    @Suppress("UNUSED_PARAMETER") isLoading: Boolean = false,
     openDetail: (String) -> Unit = {},
-    detailId: String? = null,
     onNavigateToRoute: (String) -> Unit = {}
 ) {
-    // 임시 데이터
-    val products = remember {
-        listOf(
-            Product("1", "Json","Json 명함 제작", 60000, null),
-            Product("1", "Json","Json 명함 제작", 60000, null),
-            Product("1", "Json","Json 명함 제작", 60000, null),
-            Product("1", "Json","Json 명함 제작", 60000, null),
-            Product("1", "Json","Json 명함 제작", 60000, null),
-            Product("1", "Json","Json 명함 제작", 60000, null),
-        )
-    }
-    
-    val categories = listOf("전체", "마우스", "키보드", "키캡", "마우스패드")
+    // "전체" 카테고리를 맨 앞에 추가
+    val displayCategories = listOf("전체") + categories
     var selectedCategory by remember { mutableStateOf("전체") }
     var currentRoute by remember { mutableStateOf("home") }
+    
+    // 선택된 카테고리에 따라 상품 필터링
+    val filteredProducts = if (selectedCategory == "전체") {
+        products
+    } else if (selectedCategory == "new") {
+        // "new" 카테고리는 isNew 필드로 필터링
+        products.filter { it.isNew }
+    } else {
+        // 상품의 categories 필드를 사용하여 필터링
+        products.filter { product ->
+            product.categories.any { it.equals(selectedCategory, ignoreCase = true) }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -79,42 +105,51 @@ fun HomeScreen(
             BottomNavigationBar(
                 currentRoute = currentRoute,
                 onItemClick = { route ->
+                    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
                     currentRoute = route
                     onNavigateToRoute(route)
                 }
             )
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
-            Column(
-                modifier = Modifier.fillMaxSize()
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = 0.dp,
+                bottom = 16.dp
+            ),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
             ) {
-                // 이미지 슬라이드 카드뉴스
+            // 배너 (전체 너비 차지)
+            item(span = { GridItemSpan(2) }) {
                 ImageSliderBanner()
+            }
                 
-                // 필터 버튼들
+            // 필터 칩 (전체 너비 차지)
+            item(span = { GridItemSpan(2) }) {
                 FilterChips(
-                    categories = categories,
+                    categories = displayCategories,
                     selectedCategory = selectedCategory,
-                    onCategorySelected = { selectedCategory = it }
+                    onCategorySelected = {
+                        @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
+                        selectedCategory = it
+                    }
                 )
+            }
                 
-                // 상품 그리드
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(products) { product ->
+            // 상품 그리드
+            items(filteredProducts) { product ->
                         ProductCard(
                             product = product,
                             onClick = { openDetail(product.id) },
                             modifier = Modifier.fillMaxWidth()
                         )
-                    }
-                }
             }
         }
     }
