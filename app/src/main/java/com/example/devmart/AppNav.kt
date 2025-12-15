@@ -30,6 +30,7 @@ import com.example.devmart.ui.session.AuthState
 import com.example.devmart.ui.session.SessionViewModel
 import com.example.devmart.ui.payment.PaymentScreen
 import com.example.devmart.ui.payment.PaymentViewModel
+import com.example.devmart.ui.payment.PaymentState
 import com.example.devmart.ui.payment.DaumPostcodeScreen
 import com.example.devmart.ui.payment.OrderProduct
 import com.example.devmart.ui.order.OrderHistoryScreen
@@ -214,6 +215,8 @@ fun AppNav() {
                 @Suppress("DEPRECATION")
                 val paymentViewModel: PaymentViewModel = hiltViewModel()
                 val addressState by paymentViewModel.address.collectAsState()
+                val paymentState by paymentViewModel.paymentState.collectAsState()
+                val userMileage by paymentViewModel.mileage.collectAsState()
                 
                 LaunchedEffect(Unit) {
                     paymentViewModel.loadMyAddress()
@@ -271,6 +274,8 @@ fun AppNav() {
                 PaymentScreen(
                     address = addressState ?: com.example.devmart.ui.payment.Address(),
                     products = products,
+                    availableMileage = userMileage, // 실제 유저 마일리지 (API에서 조회)
+                    paymentState = paymentState,
                     onBackClick = { 
                         // 바로 구매 데이터 정리
                         prevSavedStateHandle?.remove<String>("buyNowProductId")
@@ -292,8 +297,31 @@ fun AppNav() {
                     onSaveAddress = { address ->
                         paymentViewModel.updateMyAddress(address)
                     },
-                    onClickPayment = {
-                        // TODO: 결제 처리
+                    onClickPayment = { mileageToUse ->
+                        // 첫 번째 상품으로 주문 생성 (여러 상품은 추후 확장)
+                        val firstProduct = products.firstOrNull()
+                        if (firstProduct != null) {
+                            paymentViewModel.createOrder(
+                                itemId = firstProduct.id.toLongOrNull() ?: 0L,
+                                quantity = firstProduct.qty,
+                                mileageToUse = mileageToUse
+                            )
+                        }
+                    },
+                    onPaymentComplete = {
+                        // 바로 구매 데이터 정리
+                        prevSavedStateHandle?.remove<String>("buyNowProductId")
+                        prevSavedStateHandle?.remove<String>("buyNowProductName")
+                        prevSavedStateHandle?.remove<String>("buyNowProductBrand")
+                        prevSavedStateHandle?.remove<Long>("buyNowProductPrice")
+                        
+                        // 홈으로 이동
+                        nav.navigate(Route.Home.path) {
+                            popUpTo(Route.MainGraph.path) { inclusive = false }
+                        }
+                    },
+                    onResetPaymentState = {
+                        paymentViewModel.resetPaymentState()
                     }
                 )
             }

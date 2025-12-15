@@ -156,17 +156,17 @@ fun <T> Top100SearchScreen(
 
             // ----- 최근 검색어 -----
             if (recentSearches.isNotEmpty()) {
-                item {
-                    Text(
-                        text = "최근 검색어",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = DevBlack,
-                        fontFamily = DevFonts.KakaoBigSans
-                    )
-                }
+            item {
+                Text(
+                    text = "최근 검색어",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = DevBlack,
+                    fontFamily = DevFonts.KakaoBigSans
+                )
+            }
 
-                item {
+            item {
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)

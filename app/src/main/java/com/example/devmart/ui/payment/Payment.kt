@@ -28,8 +28,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.devmart.ui.component.BackButton
 import com.example.devmart.ui.component.OrderItemCard
 import com.example.devmart.ui.component.OrderItemMode
@@ -37,8 +39,6 @@ import com.example.devmart.ui.theme.DevDarkneyvy
 import com.example.devmart.ui.theme.DevFonts
 import com.example.devmart.ui.theme.DevMartTheme
 import com.example.devmart.ui.theme.DevWhite
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 
 // ----------------------- 데이터 클래스 -----------------------
 
@@ -63,14 +63,44 @@ data class Address(
 fun PaymentScreen(
     address: Address = Address(),
     products: List<OrderProduct> = emptyList(),
+    availableMileage: Int = 0,
+    paymentState: PaymentState = PaymentState.Idle,
     onBackClick: () -> Unit = {},
     onNavigateToAddressSearch: () -> Unit = {},
     onSaveAddress: (Address) -> Unit = {},
-    onClickPayment: () -> Unit = {}
+    onClickPayment: (mileageToUse: Int) -> Unit = {},
+    onPaymentComplete: () -> Unit = {},
+    onResetPaymentState: () -> Unit = {}
 ) {
     val totalPrice = products.sumOf { it.price * it.qty }
     val deliveryFee = if (products.isEmpty()) 0 else 3000
     val finalAmount = totalPrice + deliveryFee
+    
+    var showPaymentDialog by remember { mutableStateOf(false) }
+    
+    // 결제 모달
+    if (showPaymentDialog) {
+        PaymentConfirmDialog(
+            products = products,
+            totalAmount = totalPrice,
+            deliveryFee = deliveryFee,
+            availableMileage = availableMileage,
+            address = address,
+            paymentState = paymentState,
+            onConfirm = { mileageToUse ->
+                onClickPayment(mileageToUse)
+            },
+            onDismiss = {
+                showPaymentDialog = false
+                onResetPaymentState()
+            },
+            onNavigateToHome = {
+                showPaymentDialog = false
+                onResetPaymentState()
+                onPaymentComplete()
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -128,7 +158,7 @@ fun PaymentScreen(
 
         // ------------------ 결제 버튼 ------------------
         Button(
-            onClick = onClickPayment,
+            onClick = { showPaymentDialog = true },
             colors = ButtonDefaults.buttonColors(
                 containerColor = DevDarkneyvy,
                 contentColor = DevWhite
@@ -304,7 +334,8 @@ fun PreviewPaymentScreen() {
             products = listOf(
                 OrderProduct("1", "게이밍 키보드", "청축 스위치 / RGB", 99000, 1),
                 OrderProduct("2", "게이밍 마우스", "16000 DPI / 블랙", 59000, 2)
-            )
+            ),
+            availableMileage = 5000
         )
     }
 }

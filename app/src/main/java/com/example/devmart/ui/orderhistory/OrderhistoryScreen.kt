@@ -65,7 +65,7 @@ fun OrderHistoryScreen(
 ) {
     Scaffold(
         topBar = {
-            OrderHistoryTopBar(onBackClick = onBack)
+                OrderHistoryTopBar(onBackClick = onBack)
         },
         bottomBar = {
             BottomNavigationBar(
@@ -91,18 +91,18 @@ private fun OrderHistoryContent(
     modifier: Modifier,
     uiState: OrderHistoryUiState,
     onReorder: (OrderSummaryUi) -> Unit
-) {
-    Column(
+        ) {
+            Column(
         modifier = modifier
-            .padding(horizontal = 20.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
+                    .padding(horizontal = 20.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
 
         Spacer(Modifier.height(16.dp))
 
         DevMartHeader()
 
-        Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(16.dp))
 
         OrderHistoryList(
             orderGroups = uiState.orderGroups,
@@ -112,21 +112,21 @@ private fun OrderHistoryContent(
 }
 @Composable
 private fun DevMartHeader() {
-    Text(
-        text = "Dev Mart",
-        fontFamily = DevFonts.KakaoBigSans,
-        fontWeight = FontWeight.ExtraBold,
-        fontSize = 20.sp,
-        color = DevDarkneyvy
-    )
+                Text(
+                    text = "Dev Mart",
+                    fontFamily = DevFonts.KakaoBigSans,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 20.sp,
+                    color = DevDarkneyvy
+                )
 
-    Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(4.dp))
 
-    HorizontalDivider(
-        modifier = Modifier.fillMaxWidth(),
-        color = DevDarkneyvy.copy(alpha = 0.8f),
-        thickness = 1.dp
-    )
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = DevDarkneyvy.copy(alpha = 0.8f),
+                    thickness = 1.dp
+                )
 }
 @Composable
 private fun OrderHistoryList(
@@ -147,23 +147,23 @@ private fun OrderGroupSection(
     group: OrderGroupUi,
     onReorder: (OrderSummaryUi) -> Unit
 ) {
-    Text(
-        text = group.orderDateLabel,
-        fontFamily = DevFonts.KakaoBigSans,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 14.sp,
-        color = DevBlack
-    )
+                    Text(
+                        text = group.orderDateLabel,
+                        fontFamily = DevFonts.KakaoBigSans,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp,
+                        color = DevBlack
+                    )
 
-    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(8.dp))
 
-    group.items.forEach { item ->
-        OrderSummaryCard(
-            item = item,
-            onReorder = { onReorder(item) }
-        )
-        Spacer(Modifier.height(16.dp))
-    }
+                    group.items.forEach { item ->
+                        OrderSummaryCard(
+                            item = item,
+                            onReorder = { onReorder(item) }
+                        )
+                        Spacer(Modifier.height(16.dp))
+                    }
 }
 
 @Composable
@@ -288,24 +288,24 @@ fun OrderSummaryCard(
 
             Spacer(Modifier.height(12.dp))
 
-            OutlinedButton(
-                onClick = onReorder,
-                modifier = Modifier
+                OutlinedButton(
+                    onClick = onReorder,
+                    modifier = Modifier
                     .fillMaxWidth()
-                    .height(40.dp),
-                shape = RoundedCornerShape(6.dp)
-            ) {
-                Text(
-                    text = "재구매",
-                    fontFamily = DevFonts.KakaoBigSans,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
-                    color = DevBlack
-                )
+                        .height(40.dp),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Text(
+                        text = "재구매",
+                        fontFamily = DevFonts.KakaoBigSans,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = DevBlack
+                    )
+                }
             }
         }
     }
-}
 
 private fun previewState() = OrderHistoryUiState(
     orderGroups = listOf(

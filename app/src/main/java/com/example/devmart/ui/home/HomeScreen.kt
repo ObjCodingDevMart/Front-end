@@ -61,7 +61,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomeScreen(
     openDetail: (String) -> Unit = {},
-    detailId: String? = null,
+    @Suppress("UNUSED_PARAMETER") detailId: String? = null, // TODO: 상품 상세에서 돌아올 때 사용 예정
     onNavigateToRoute: (String) -> Unit = {}
 ) {
     // 임시 데이터
@@ -120,12 +120,12 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-        ) {
+            ) {
             // 배너 (전체 너비 차지)
             item(span = { GridItemSpan(2) }) {
                 ImageSliderBanner()
             }
-            
+                
             // 필터 칩 (전체 너비 차지)
             item(span = { GridItemSpan(2) }) {
                 FilterChips(
@@ -134,14 +134,14 @@ fun HomeScreen(
                     onCategorySelected = { selectedCategory = it }
                 )
             }
-            
-            // 상품 그리드
-            items(products) { product ->
-                ProductCard(
-                    product = product,
-                    onClick = { openDetail(product.id) },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                
+                // 상품 그리드
+                    items(products) { product ->
+                        ProductCard(
+                            product = product,
+                            onClick = { openDetail(product.id) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
             }
         }
     }

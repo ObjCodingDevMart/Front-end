@@ -73,7 +73,7 @@ fun UserScreen(
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = DevBlack
-            )
+                )
         }
 
         // 프로필 이미지
