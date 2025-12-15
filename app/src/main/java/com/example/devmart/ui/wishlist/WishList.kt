@@ -31,7 +31,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.devmart.ui.component.BottomNavigationBar
 import com.example.devmart.ui.component.BottomNavItem
 import com.example.devmart.ui.theme.DevBlack
@@ -46,7 +48,8 @@ data class WishlistItemUi(
     val id: Long,
     val brand: String,
     val name: String,
-    val price: String
+    val price: String,
+    val imageUrl: String? = null
 )
 
 data class WishlistScreenState(
@@ -199,8 +202,18 @@ private fun WishlistProductItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(0.8f)
-                .background(DevGray)
-        )
+                .background(DevGray),
+            contentAlignment = Alignment.Center
+        ) {
+            if (!item.imageUrl.isNullOrEmpty()) {
+                AsyncImage(
+                    model = item.imageUrl,
+                    contentDescription = item.name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
 
         Spacer(Modifier.height(8.dp))
 
