@@ -51,7 +51,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -89,11 +88,13 @@ fun ProductDetailScreen(
     isReviewLoading: Boolean = false,
     isLiked: Boolean = false,
     likeMessage: String? = null,
+    cartMessage: String? = null,
     onBackClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     onLikeClick: () -> Unit = {},
     onClearLikeMessage: () -> Unit = {},
     onAddToCart: () -> Unit = {},
+    onClearCartMessage: () -> Unit = {},
     onBuyNow: () -> Unit = {}
 ) {
     // 임시 데이터 (실제로는 파라미터로 받아야 함)
@@ -111,13 +112,20 @@ fun ProductDetailScreen(
     
     // 스낵바
     val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope()
     
     // 좋아요 메시지 처리
     LaunchedEffect(likeMessage) {
         likeMessage?.let { message ->
             snackbarHostState.showSnackbar(message)
             onClearLikeMessage()
+        }
+    }
+    
+    // 장바구니 메시지 처리
+    LaunchedEffect(cartMessage) {
+        cartMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            onClearCartMessage()
         }
     }
     
@@ -165,12 +173,7 @@ fun ProductDetailScreen(
             BottomActionBar(
                 isLiked = isLiked,
                 onLikeClick = onLikeClick,
-                onAddToCart = {
-                    onAddToCart()
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar("장바구니에 추가되었습니다")
-                    }
-                },
+                onAddToCart = onAddToCart,
                 onBuyNow = onBuyNow
             )
         }
@@ -749,31 +752,31 @@ fun ReviewItem(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // 리뷰 헤더 (작성자, 별점, 날짜)
+            // 리뷰 헤더 (별점 + 작성자)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        text = review.userName,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = DevBlack
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     StarRating(
                         rating = review.rating,
                         modifier = Modifier
                     )
+                    
+                    // 마스킹된 사용자 이름 표시
+                    review.userName?.let { name ->
+                        Text(
+                            text = maskUserName(name),
+                            fontSize = 13.sp,
+                            color = DevDarkgray,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
-                
-                Text(
-                    text = review.date,
-                    fontSize = 12.sp,
-                    color = DevDarkgray
-                )
             }
             
             Spacer(modifier = Modifier.height(12.dp))
@@ -787,25 +790,34 @@ fun ReviewItem(
             )
             
             // 리뷰 이미지가 있는 경우
-            review.images?.takeIf { it.isNotEmpty() }?.let { images ->
+            review.imgUrl?.let { imageUrl ->
                 Spacer(modifier = Modifier.height(12.dp))
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(images) { imageUrl ->
-                        AsyncImage(
-                            model = imageUrl,
-                            contentDescription = "리뷰 이미지",
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-                }
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = "리뷰 이미지",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
             }
         }
     }
+}
+
+/**
+ * 사용자 이름 마스킹 처리
+ * 첫 글자만 보여주고 나머지는 *로 대체
+ * 예: "홍길동" -> "홍**", "John" -> "J***"
+ */
+private fun maskUserName(name: String): String {
+    if (name.isEmpty()) return ""
+    if (name.length == 1) return name
+    
+    val firstChar = name.first()
+    val maskedPart = "*".repeat(name.length - 1)
+    return "$firstChar$maskedPart"
 }
 
 @Composable

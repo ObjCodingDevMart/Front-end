@@ -196,9 +196,12 @@ fun DeliveryInfoBox(
 
     // 외부에서 address가 변경되면 내부 상태도 동기화
     LaunchedEffect(address.postalCode, address.roadAddress) {
+        android.util.Log.d("DeliveryInfoBox", "LaunchedEffect: postalCode=${address.postalCode}, roadAddress=${address.roadAddress}")
         postal = address.postalCode
         road = address.roadAddress
     }
+    
+    android.util.Log.d("DeliveryInfoBox", "Render: postal=$postal, road=$road, address.postal=${address.postalCode}")
 
     Column(
         modifier = Modifier

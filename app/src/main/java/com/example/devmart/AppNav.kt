@@ -19,10 +19,8 @@ import com.example.devmart.ui.auth.Top100ViewModel
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.user.UserApiClient
 import com.example.devmart.ui.cart.CartScreen
-import com.example.devmart.ui.cart.CartScreenState
 import com.example.devmart.ui.cart.CartScreenActions
-import com.example.devmart.ui.cart.CartPriceSummaryUiState
-import com.example.devmart.ui.cart.CartOrderInfoUiState
+import com.example.devmart.ui.cart.CartViewModel
 import com.example.devmart.ui.component.ProductCard
 import com.example.devmart.ui.home.HomeScreen
 import com.example.devmart.ui.home.HomeViewModel
@@ -36,12 +34,14 @@ import com.example.devmart.ui.payment.DaumPostcodeScreen
 import com.example.devmart.ui.payment.OrderProduct
 import com.example.devmart.ui.order.OrderHistoryScreen
 import com.example.devmart.ui.order.OrderHistoryUiState
-import com.example.devmart.ui.order.OrderGroupUi
-import com.example.devmart.ui.order.OrderSummaryUi
+import com.example.devmart.ui.orderhistory.OrderHistoryViewModel
 import com.example.devmart.ui.user.UserScreen
 import com.example.devmart.ui.wishlist.WishlistScreen
 import com.example.devmart.ui.wishlist.WishlistScreenActions
 import com.example.devmart.ui.wishlist.WishlistViewModel
+import com.example.devmart.ui.review.ReviewDialog
+import com.example.devmart.ui.review.ReviewTargetItem
+import com.example.devmart.ui.review.ReviewViewModel
 
 @Suppress("DEPRECATION")
 @Composable
@@ -199,11 +199,13 @@ fun AppNav() {
                     isReviewLoading = detailState.isReviewLoading,
                     isLiked = detailState.isLiked,
                     likeMessage = detailState.likeMessage,
+                    cartMessage = detailState.cartMessage,
                     onBackClick = { nav.popBackStack() },
                     onSearchClick = { nav.navigate(Route.Top100.path) },
                     onLikeClick = { detailViewModel.toggleLike() },
                     onClearLikeMessage = { detailViewModel.clearLikeMessage() },
-                    onAddToCart = { /* TODO: 장바구니 추가 기능 구현 */ },
+                    onAddToCart = { detailViewModel.addToCart() },
+                    onClearCartMessage = { detailViewModel.clearCartMessage() },
                     onBuyNow = {
                         // 바로 구매: 현재 상품 정보를 Payment로 전달
                         currentProduct?.let { product ->
@@ -221,33 +223,42 @@ fun AppNav() {
             composable(Route.Payment.path) { backStackEntry ->
                 @Suppress("DEPRECATION")
                 val paymentViewModel: PaymentViewModel = hiltViewModel()
+                @Suppress("DEPRECATION")
+                val cartViewModel: CartViewModel = hiltViewModel()
+                
                 val addressState by paymentViewModel.address.collectAsState()
                 val paymentState by paymentViewModel.paymentState.collectAsState()
                 val userMileage by paymentViewModel.mileage.collectAsState()
                 
-                LaunchedEffect(Unit) {
-                    paymentViewModel.loadMyAddress()
-                }
+                android.util.Log.d("AppNav", "addressState: ${addressState?.postalCode}, ${addressState?.roadAddress}")
+                val cartState by cartViewModel.uiState.collectAsState()
                 
-                // 주소 검색 화면에서 선택한 주소 받기
+                // 주소는 ViewModel init에서 로드됨 (중복 로드 방지)
+                // loadMyAddress()를 여기서 다시 호출하면 검색에서 선택한 주소가 덮어씌워짐
+                
+                // 주소 검색 화면에서 선택한 주소 받기 (StateFlow로 변경 감지)
                 val savedStateHandle = backStackEntry.savedStateHandle
-                val selectedRoadAddress = savedStateHandle.get<String>("selectedRoadAddress")
-                val selectedPostalCode = savedStateHandle.get<String>("selectedPostalCode")
-                val selectedJibunAddress = savedStateHandle.get<String>("selectedJibunAddress")
+                val selectedRoadAddress by savedStateHandle.getStateFlow("selectedRoadAddress", "").collectAsState()
+                val selectedPostalCode by savedStateHandle.getStateFlow("selectedPostalCode", "").collectAsState()
+                val selectedJibunAddress by savedStateHandle.getStateFlow("selectedJibunAddress", "").collectAsState()
+                
+                android.util.Log.d("Payment", "StateFlow values: road=$selectedRoadAddress, postal=$selectedPostalCode")
                 
                 LaunchedEffect(selectedRoadAddress, selectedPostalCode) {
-                    if (!selectedRoadAddress.isNullOrEmpty() && !selectedPostalCode.isNullOrEmpty()) {
+                    android.util.Log.d("Payment", "LaunchedEffect triggered: road=$selectedRoadAddress, postal=$selectedPostalCode")
+                    if (selectedRoadAddress.isNotEmpty() && selectedPostalCode.isNotEmpty()) {
+                        android.util.Log.d("Payment", "Calling setSelectedAddress")
                         paymentViewModel.setSelectedAddress(
                             com.example.devmart.ui.payment.Address(
                                 roadAddress = selectedRoadAddress,
                                 postalCode = selectedPostalCode,
-                                jibunAddress = selectedJibunAddress ?: ""
+                                jibunAddress = selectedJibunAddress
                             )
                         )
                         // 사용 후 초기화
-                        savedStateHandle.remove<String>("selectedRoadAddress")
-                        savedStateHandle.remove<String>("selectedPostalCode")
-                        savedStateHandle.remove<String>("selectedJibunAddress")
+                        savedStateHandle["selectedRoadAddress"] = ""
+                        savedStateHandle["selectedPostalCode"] = ""
+                        savedStateHandle["selectedJibunAddress"] = ""
                     }
                 }
                 
@@ -274,11 +285,8 @@ fun AppNav() {
                         )
                     )
                 } else {
-                    // 장바구니에서 온 경우: 장바구니 상품들 (더미)
-                    listOf(
-                        OrderProduct("1", "게이밍 키보드", "청축 스위치 / RGB", 99000, 1),
-                        OrderProduct("2", "게이밍 마우스", "16000 DPI / 블랙", 59000, 2)
-                    )
+                    // 장바구니에서 온 경우: 실제 장바구니 상품들
+                    cartState.products
                 }
                 
                 PaymentScreen(
@@ -315,7 +323,8 @@ fun AppNav() {
                             paymentViewModel.createOrder(
                                 itemId = firstProduct.id.toLongOrNull() ?: 0L,
                                 quantity = firstProduct.qty,
-                                mileageToUse = mileageToUse
+                                mileageToUse = mileageToUse,
+                                isBuyNow = isBuyNow  // 바로구매 여부 전달
                             )
                         }
                     },
@@ -340,10 +349,13 @@ fun AppNav() {
                 DaumPostcodeScreen(
                     onAddressSelected = { postalCode, roadAddress, jibunAddress, _ ->
                         // 선택한 주소를 Payment 화면으로 전달
+                        android.util.Log.d("AddressSearch", "Selected: postal=$postalCode, road=$roadAddress")
+                        android.util.Log.d("AddressSearch", "previousBackStackEntry: ${nav.previousBackStackEntry?.destination?.route}")
                         nav.previousBackStackEntry?.savedStateHandle?.apply {
                             set("selectedRoadAddress", roadAddress)
                             set("selectedPostalCode", postalCode)
                             set("selectedJibunAddress", jibunAddress)
+                            android.util.Log.d("AddressSearch", "Saved to savedStateHandle")
                         }
                         nav.popBackStack()
                     },
@@ -398,25 +410,12 @@ fun AppNav() {
             
             // 장바구니 화면
             composable(Route.Cart.path) {
-                val dummyCartState = CartScreenState(
-                    products = listOf(
-                        OrderProduct("1", "게이밍 키보드", "청축 / RGB", 99000, 1),
-                        OrderProduct("2", "게이밍 마우스", "16000 DPI / 블랙", 59000, 2)
-                    ),
-                    priceSummary = CartPriceSummaryUiState(
-                        productAmountText = "217,000원",
-                        shippingFeeText = "3,000원",
-                        orderAmountText = "220,000원"
-                    ),
-                    orderInfo = CartOrderInfoUiState(
-                        totalQuantityText = "3개",
-                        totalProductAmountText = "217,000원",
-                        totalShippingFeeText = "3,000원"
-                    )
-                )
+                @Suppress("DEPRECATION")
+                val cartViewModel: CartViewModel = hiltViewModel()
+                val cartState by cartViewModel.uiState.collectAsState()
                 
                 CartScreen(
-                    state = dummyCartState,
+                    state = cartState,
                     actions = CartScreenActions(
                         onBackClick = { 
                             val popped = nav.popBackStack()
@@ -444,9 +443,9 @@ fun AppNav() {
                                 }
                             }
                         },
-                        onProductIncrement = { /* TODO: 수량 증가 */ },
-                        onProductDecrement = { /* TODO: 수량 감소 */ },
-                        onProductRemove = { /* TODO: 아이템 삭제 */ },
+                        onProductIncrement = { cartViewModel.incrementQuantity(it) },
+                        onProductDecrement = { cartViewModel.decrementQuantity(it) },
+                        onProductRemove = { cartViewModel.removeFromCart(it) },
                         onClickPayment = { nav.navigate(Route.Payment.path) }
                     ),
                     currentRoute = "order"
@@ -524,32 +523,37 @@ fun AppNav() {
             
             // 구매내역 화면
             composable(Route.OrderHistory.path) {
-                val dummyOrderHistory = OrderHistoryUiState(
-                    orderGroups = listOf(
-                        OrderGroupUi(
-                            orderDateLabel = "2024.12.01",
-                            items = listOf(
-                                OrderSummaryUi(
-                                    orderId = "1",
-                                    brandName = "로지텍",
-                                    productName = "게이밍 키보드",
-                                    optionText = "청축 / RGB",
-                                    priceText = "99,000원"
-                                ),
-                                OrderSummaryUi(
-                                    orderId = "2",
-                                    brandName = "로지텍",
-                                    productName = "게이밍 마우스",
-                                    optionText = "16000 DPI",
-                                    priceText = "59,000원"
-                                )
-                            )
-                        )
+                @Suppress("DEPRECATION")
+                val orderHistoryViewModel: OrderHistoryViewModel = hiltViewModel()
+                val orderHistoryState by orderHistoryViewModel.uiState.collectAsState()
+                
+                // 리뷰 작성 관련
+                @Suppress("DEPRECATION")
+                val reviewViewModel: ReviewViewModel = hiltViewModel()
+                val reviewState by reviewViewModel.reviewState.collectAsState()
+                val reviewTargetItem by reviewViewModel.targetItem.collectAsState()
+                
+                // 리뷰 작성 모달
+                reviewTargetItem?.let { targetItem ->
+                    ReviewDialog(
+                        targetItem = targetItem,
+                        reviewState = reviewState,
+                        onSubmit = { rating, content ->
+                            reviewViewModel.createReview(rating, content)
+                        },
+                        onDismiss = {
+                            reviewViewModel.clearTargetItem()
+                        },
+                        onComplete = {
+                            reviewViewModel.clearTargetItem()
+                            // 주문 내역 새로고침
+                            orderHistoryViewModel.loadOrderHistory()
+                        }
                     )
-                )
+                }
                 
                 OrderHistoryScreen(
-                    uiState = dummyOrderHistory,
+                    uiState = orderHistoryState,
                     onBack = { 
                         val popped = nav.popBackStack()
                         if (!popped) {
@@ -579,7 +583,19 @@ fun AppNav() {
                             }
                         }
                     },
-                    onReorder = { /* TODO: 재주문 */ }
+                    onReorder = { /* TODO: 재주문 */ },
+                    onWriteReview = { orderItem ->
+                        // 리뷰 작성 대상 상품 설정
+                        reviewViewModel.setTargetItem(
+                            ReviewTargetItem(
+                                itemId = orderItem.itemId,
+                                itemName = orderItem.productName,
+                                brand = orderItem.brandName,
+                                price = orderItem.price,
+                                imagePath = orderItem.imagePath
+                            )
+                        )
+                    }
                 )
             }
         }

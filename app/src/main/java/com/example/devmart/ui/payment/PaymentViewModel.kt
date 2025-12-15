@@ -2,8 +2,10 @@ package com.example.devmart.ui.payment
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.util.Log
 import com.example.devmart.data.remote.AddressApi
 import com.example.devmart.data.remote.AuthApi
+import com.example.devmart.data.remote.CartApi
 import com.example.devmart.data.remote.dto.UpdateAddressRequest
 import com.example.devmart.data.repository.OrderRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +24,7 @@ class PaymentViewModel @Inject constructor(
 
     private val authApi = retrofit.create(AuthApi::class.java)
     private val addressApi = retrofit.create(AddressApi::class.java)
+    private val cartApi = retrofit.create(CartApi::class.java)
 
     private val _address = MutableStateFlow<Address?>(null)
     val address = _address.asStateFlow()
@@ -102,12 +105,14 @@ class PaymentViewModel @Inject constructor(
 
     // 주소 검색에서 선택된 주소를 임시로 반영 (서버 저장 전)
     fun setSelectedAddress(selectedAddress: Address) {
+        Log.d("PaymentViewModel", "setSelectedAddress called: postal=${selectedAddress.postalCode}, road=${selectedAddress.roadAddress}")
         val current = _address.value ?: Address()
         _address.value = current.copy(
             postalCode = selectedAddress.postalCode,
             roadAddress = selectedAddress.roadAddress,
             jibunAddress = selectedAddress.jibunAddress
         )
+        Log.d("PaymentViewModel", "Address updated: ${_address.value}")
     }
 
     // 주문 생성 (결제) - 현재는 바로 성공 처리
@@ -115,7 +120,8 @@ class PaymentViewModel @Inject constructor(
     fun createOrder(
         itemId: Long,
         quantity: Int,
-        mileageToUse: Int = 0
+        mileageToUse: Int = 0,
+        isBuyNow: Boolean = false  // 바로구매 여부
     ) {
         viewModelScope.launch {
             _paymentState.value = PaymentState.Loading
@@ -127,6 +133,11 @@ class PaymentViewModel @Inject constructor(
                 message = "주문이 정상적으로 완료되었습니다."
             )
             
+            // 장바구니에서 결제한 경우에만 장바구니 초기화
+            if (!isBuyNow) {
+                clearCart()
+            }
+            
             // TODO: 실제 결제 연동 시 아래 코드 사용
             // orderRepository.createOrder(
             //     itemId = itemId,
@@ -136,11 +147,29 @@ class PaymentViewModel @Inject constructor(
             //     _paymentState.value = PaymentState.Success(
             //         message = response.message.ifEmpty { "주문이 정상적으로 완료되었습니다." }
             //     )
+            //     if (!isBuyNow) { clearCart() }
             // }.onFailure { error ->
             //     _paymentState.value = PaymentState.Error(
             //         message = error.message ?: "결제 처리 중 오류가 발생했습니다."
             //     )
             // }
+        }
+    }
+
+    // 장바구니 초기화
+    private fun clearCart() {
+        viewModelScope.launch {
+            try {
+                Log.d("PaymentViewModel", "Clearing cart after payment...")
+                val response = cartApi.clearCart()
+                if (response.success == true) {
+                    Log.d("PaymentViewModel", "Cart cleared successfully")
+                } else {
+                    Log.e("PaymentViewModel", "Failed to clear cart: ${response.message}")
+                }
+            } catch (e: Exception) {
+                Log.e("PaymentViewModel", "Error clearing cart", e)
+            }
         }
     }
 

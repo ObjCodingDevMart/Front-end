@@ -46,10 +46,10 @@ class WishlistViewModel @Inject constructor(
                         val item = dto.item
                         Log.d("WishlistViewModel", "Item: id=${item.itemId}, name=${item.itemName}")
                         WishlistItemUi(
-                            id = item.itemId,
+                            id = item.itemId ?: 0L,
                             brand = item.brand,
                             name = item.itemName,
-                            price = formatPrice(item.price),
+                            price = formatPrice(item.price.toLong()),
                             imageUrl = item.imagePath
                         )
                     }

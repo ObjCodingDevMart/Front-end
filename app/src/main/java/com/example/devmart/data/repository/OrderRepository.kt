@@ -28,7 +28,7 @@ class OrderRepository @Inject constructor(
                     mileageToUse = mileageToUse
                 )
             )
-            if (response.isSuccess) {
+            if (response.success) {
                 Result.success(response)
             } else {
                 Result.failure(Exception(response.message))

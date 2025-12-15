@@ -16,22 +16,22 @@ data class LikeResponse(
     val result: Any?
 )
 
-// 즐겨찾기 아이템 내부 DTO
+// 즐겨찾기 상품 정보 (백엔드 ItemResponseDto와 동일)
 data class LikeItemDetailDto(
-    val itemId: Long,
+    val itemId: Long?,
     val itemName: String,
-    val price: Long,
+    val price: Int,
     val imagePath: String?,
     val brand: String,
-    val categories: List<String>?,
-    val productDetailImgUrl: String?,
-    val productDetailContent: String?,
-    val new: Boolean?
+    val isNew: Boolean,
+    val categories: List<String>,
+    val productDetailImgUrl: String? = null,
+    val productDetailContent: String? = null
 )
 
-// 즐겨찾기 아이템 DTO (bookmarkId + item)
+// 즐겨찾기 아이템 DTO (백엔드 LikeBookmarkResponse와 동일)
 data class LikeItemDto(
-    val bookmarkId: Long,
+    val bookmarkId: Long?,
     val item: LikeItemDetailDto
 )
 

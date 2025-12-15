@@ -4,16 +4,17 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 
 // 상품 DTO
+// 상품 DTO (백엔드 ItemResponseDto와 동일)
 data class ItemDto(
-    val itemId: Long,
+    val itemId: Long?,
     val itemName: String,
-    val price: Long,
+    val price: Int,
     val imagePath: String?,
     val brand: String,
+    val isNew: Boolean,
     val categories: List<String>,
-    val productDetailImgUrl: String?,
-    val productDetailContent: String?,
-    val new: Boolean
+    val productDetailImgUrl: String? = null,
+    val productDetailContent: String? = null
 )
 
 // 상품 목록 응답

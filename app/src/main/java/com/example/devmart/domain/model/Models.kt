@@ -13,10 +13,8 @@ data class Product(
 )
 data class Review(
     val id: String,
-    val userId: String,
-    val userName: String,
     val rating: Int, // 1-5
     val content: String,
-    val date: String,
-    val images: List<String>? = null
+    val imgUrl: String? = null,  // 리뷰 이미지 URL
+    val userName: String? = null  // 작성자 이름 (마스킹용)
 )

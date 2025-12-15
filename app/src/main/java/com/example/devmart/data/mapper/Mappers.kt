@@ -4,13 +4,13 @@ import com.example.devmart.data.remote.ItemDto
 import com.example.devmart.domain.model.Product
 
 fun ItemDto.toDomain() = Product(
-    id = itemId.toString(),
+    id = itemId?.toString() ?: "",
     brand = brand,
     title = itemName,
-    price = price,
+    price = price.toLong(),
     imageUrl = imagePath,
     categories = categories,
     detailImageUrl = productDetailImgUrl,
     detailContent = productDetailContent,
-    isNew = new
+    isNew = isNew
 )

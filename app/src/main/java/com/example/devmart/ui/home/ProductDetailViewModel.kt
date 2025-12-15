@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.devmart.data.remote.AddToCartRequest
+import com.example.devmart.data.remote.CartApi
 import com.example.devmart.data.remote.LikeApi
 import com.example.devmart.data.remote.LikeRequest
 import com.example.devmart.data.remote.ReviewApi
@@ -28,6 +30,7 @@ data class ProductDetailUiState(
     val isReviewLoading: Boolean = false,
     val isLiked: Boolean = false,
     val likeMessage: String? = null,
+    val cartMessage: String? = null,
     val error: String? = null
 )
 
@@ -40,6 +43,7 @@ class ProductDetailViewModel @Inject constructor(
 
     private val reviewApi = retrofit.create(ReviewApi::class.java)
     private val likeApi = retrofit.create(LikeApi::class.java)
+    private val cartApi = retrofit.create(CartApi::class.java)
     private val productId: String = savedStateHandle["id"] ?: ""
 
     private val _uiState = MutableStateFlow(ProductDetailUiState())
@@ -86,13 +90,11 @@ class ProductDetailViewModel @Inject constructor(
                 if (response.success) {
                     val reviews = response.result.map { dto ->
                         Review(
-                            id = dto.reviewId.toString(),
-                            userId = dto.userId.toString(),
-                            userName = dto.userName,
-                            rating = dto.rating,
-                            content = dto.content,
-                            date = dto.createdAt.take(10).replace("-", "."),
-                            images = dto.images ?: emptyList()
+                            id = dto.reviewId?.toString() ?: "",
+                            rating = dto.rating ?: 0,
+                            content = dto.content ?: "",
+                            imgUrl = dto.imgUrl,
+                            userName = dto.nickname
                         )
                     }
                     _uiState.value = _uiState.value.copy(
@@ -207,5 +209,48 @@ class ProductDetailViewModel @Inject constructor(
 
     fun clearLikeMessage() {
         _uiState.value = _uiState.value.copy(likeMessage = null)
+    }
+
+    fun addToCart(quantity: Int = 1) {
+        val currentProduct = _uiState.value.product ?: return
+        val itemId = currentProduct.id.toLongOrNull() ?: return
+
+        Log.d("ProductDetailVM", "addToCart: itemId=$itemId, quantity=$quantity")
+
+        viewModelScope.launch {
+            try {
+                val response = cartApi.addToCart(AddToCartRequest(itemId, quantity))
+                Log.d("ProductDetailVM", "addToCart response: code=${response.code}, message=${response.message}")
+                
+                // code가 CART로 시작하면 성공
+                if (response.success == true) {
+                    _uiState.value = _uiState.value.copy(
+                        cartMessage = response.message ?: "장바구니에 추가되었습니다"
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        cartMessage = response.message ?: "장바구니 추가에 실패했습니다"
+                    )
+                }
+            } catch (e: HttpException) {
+                Log.e("ProductDetailVM", "HttpException in addToCart: ${e.code()}", e)
+                val errorBody = e.response()?.errorBody()?.string()
+                Log.e("ProductDetailVM", "Error body: $errorBody")
+                
+                // 이미 장바구니에 있는 경우 등 에러 처리
+                _uiState.value = _uiState.value.copy(
+                    cartMessage = "장바구니 추가 중 오류가 발생했습니다"
+                )
+            } catch (e: Exception) {
+                Log.e("ProductDetailVM", "Exception in addToCart", e)
+                _uiState.value = _uiState.value.copy(
+                    cartMessage = "장바구니 추가 중 오류가 발생했습니다"
+                )
+            }
+        }
+    }
+
+    fun clearCartMessage() {
+        _uiState.value = _uiState.value.copy(cartMessage = null)
     }
 }
