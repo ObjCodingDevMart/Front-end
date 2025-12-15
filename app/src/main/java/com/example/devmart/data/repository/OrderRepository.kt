@@ -14,7 +14,6 @@ class OrderRepository @Inject constructor(
 ) {
     private val api = retrofit.create(OrderApi::class.java)
 
-    @Suppress("unused") // TODO: 실제 결제 연동 시 사용
     suspend fun createOrder(
         itemId: Long,
         quantity: Int,
