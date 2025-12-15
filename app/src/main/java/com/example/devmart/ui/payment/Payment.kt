@@ -65,6 +65,7 @@ fun PaymentScreen(
     products: List<OrderProduct> = emptyList(),
     availableMileage: Int = 0,
     paymentState: PaymentState = PaymentState.Idle,
+    isBuyNow: Boolean = false,
     onBackClick: () -> Unit = {},
     onNavigateToAddressSearch: () -> Unit = {},
     onSaveAddress: (Address) -> Unit = {},
@@ -76,7 +77,15 @@ fun PaymentScreen(
     val deliveryFee = if (products.isEmpty()) 0 else 3000
     val finalAmount = totalPrice + deliveryFee
     
-    var showPaymentDialog by remember { mutableStateOf(false) }
+    // 바로구매일 경우 결제 모달 자동 표시
+    var showPaymentDialog by remember { mutableStateOf(isBuyNow) }
+    
+    // isBuyNow가 변경되면 다이얼로그 상태 업데이트
+    LaunchedEffect(isBuyNow) {
+        if (isBuyNow) {
+            showPaymentDialog = true
+        }
+    }
     
     // 결제 모달
     if (showPaymentDialog) {

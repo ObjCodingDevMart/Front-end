@@ -259,8 +259,11 @@ fun AppNav() {
                 val buyNowProductBrand = prevSavedStateHandle?.get<String>("buyNowProductBrand")
                 val buyNowProductPrice = prevSavedStateHandle?.get<Long>("buyNowProductPrice")
                 
+                // 바로 구매 여부 확인
+                val isBuyNow = buyNowProductId != null && buyNowProductName != null && buyNowProductPrice != null
+                
                 // 바로 구매 상품이 있으면 해당 상품만, 없으면 장바구니 상품
-                val products = if (buyNowProductId != null && buyNowProductName != null && buyNowProductPrice != null) {
+                val products = if (isBuyNow) {
                     // 바로 구매: 해당 상품 1개만
                     listOf(
                         OrderProduct(
@@ -284,6 +287,7 @@ fun AppNav() {
                     products = products,
                     availableMileage = userMileage, // 실제 유저 마일리지 (API에서 조회)
                     paymentState = paymentState,
+                    isBuyNow = isBuyNow,
                     onBackClick = { 
                         // 바로 구매 데이터 정리
                         prevSavedStateHandle?.remove<String>("buyNowProductId")
