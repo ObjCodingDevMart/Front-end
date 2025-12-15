@@ -3,6 +3,8 @@ package com.example.devmart.ui.home
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.devmart.data.remote.LikeApi
+import com.example.devmart.data.remote.LikeRequest
 import com.example.devmart.data.remote.ReviewApi
 import com.example.devmart.domain.model.Product
 import com.example.devmart.domain.model.Review
@@ -22,6 +24,8 @@ data class ProductDetailUiState(
     val reviews: List<Review> = emptyList(),
     val isLoading: Boolean = false,
     val isReviewLoading: Boolean = false,
+    val isLiked: Boolean = false,
+    val likeMessage: String? = null,
     val error: String? = null
 )
 
@@ -33,6 +37,7 @@ class ProductDetailViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val reviewApi = retrofit.create(ReviewApi::class.java)
+    private val likeApi = retrofit.create(LikeApi::class.java)
     private val productId: String = savedStateHandle["id"] ?: ""
 
     private val _uiState = MutableStateFlow(ProductDetailUiState())
@@ -103,5 +108,43 @@ class ProductDetailViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    fun toggleLike() {
+        val currentProduct = _uiState.value.product ?: return
+        val itemId = currentProduct.id.toLongOrNull() ?: return
+        val currentlyLiked = _uiState.value.isLiked
+
+        viewModelScope.launch {
+            try {
+                if (currentlyLiked) {
+                    // 좋아요 해제
+                    val response = likeApi.removeLike(itemId)
+                    if (response.success) {
+                        _uiState.value = _uiState.value.copy(
+                            isLiked = false,
+                            likeMessage = "좋아요가 해제되었습니다"
+                        )
+                    }
+                } else {
+                    // 좋아요 추가
+                    val response = likeApi.addLike(LikeRequest(itemId))
+                    if (response.success) {
+                        _uiState.value = _uiState.value.copy(
+                            isLiked = true,
+                            likeMessage = "좋아요에 추가되었습니다"
+                        )
+                    }
+                }
+            } catch (_: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    likeMessage = "좋아요 처리 중 오류가 발생했습니다"
+                )
+            }
+        }
+    }
+
+    fun clearLikeMessage() {
+        _uiState.value = _uiState.value.copy(likeMessage = null)
     }
 }

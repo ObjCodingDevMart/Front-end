@@ -198,9 +198,12 @@ fun AppNav() {
                     product = currentProduct,
                     reviews = detailState.reviews,
                     isReviewLoading = detailState.isReviewLoading,
+                    isLiked = detailState.isLiked,
+                    likeMessage = detailState.likeMessage,
                     onBackClick = { nav.popBackStack() },
                     onSearchClick = { nav.navigate(Route.Top100.path) },
-                    onLikeClick = { /* TODO: 좋아요 기능 구현 */ },
+                    onLikeClick = { detailViewModel.toggleLike() },
+                    onClearLikeMessage = { detailViewModel.clearLikeMessage() },
                     onAddToCart = { /* TODO: 장바구니 추가 기능 구현 */ },
                     onBuyNow = {
                         // 바로 구매: 현재 상품 정보를 Payment로 전달

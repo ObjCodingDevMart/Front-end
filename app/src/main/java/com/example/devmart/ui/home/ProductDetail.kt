@@ -45,6 +45,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -86,9 +87,12 @@ fun ProductDetailScreen(
     product: Product? = null,
     reviews: List<Review> = emptyList(),
     isReviewLoading: Boolean = false,
+    isLiked: Boolean = false,
+    likeMessage: String? = null,
     onBackClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     onLikeClick: () -> Unit = {},
+    onClearLikeMessage: () -> Unit = {},
     onAddToCart: () -> Unit = {},
     onBuyNow: () -> Unit = {}
 ) {
@@ -101,7 +105,6 @@ fun ProductDetailScreen(
         imageUrl = null
     )
     
-    var isLiked by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableIntStateOf(0) }
     
     val tabs = listOf("상품 상세", "구매 안내", "리뷰")
@@ -109,6 +112,14 @@ fun ProductDetailScreen(
     // 스낵바
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    
+    // 좋아요 메시지 처리
+    LaunchedEffect(likeMessage) {
+        likeMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            onClearLikeMessage()
+        }
+    }
     
     Scaffold(
         snackbarHost = {
@@ -153,15 +164,7 @@ fun ProductDetailScreen(
         bottomBar = {
             BottomActionBar(
                 isLiked = isLiked,
-                onLikeClick = {
-                    isLiked = !isLiked
-                    onLikeClick()
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar(
-                            if (isLiked) "좋아요에 추가되었습니다" else "좋아요가 해제되었습니다"
-                        )
-                    }
-                },
+                onLikeClick = onLikeClick,
                 onAddToCart = {
                     onAddToCart()
                     coroutineScope.launch {
