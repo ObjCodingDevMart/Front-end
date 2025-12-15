@@ -60,25 +60,29 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    products: List<Product> = emptyList(),
+    categories: List<String> = emptyList(),
+    @Suppress("UNUSED_PARAMETER") isLoading: Boolean = false,
     openDetail: (String) -> Unit = {},
-    @Suppress("UNUSED_PARAMETER") detailId: String? = null, // TODO: 상품 상세에서 돌아올 때 사용 예정
     onNavigateToRoute: (String) -> Unit = {}
 ) {
-    // 임시 데이터
-    val products = remember {
-        listOf(
-            Product("1", "Json","Json 명함 제작", 60000, null),
-            Product("1", "Json","Json 명함 제작", 60000, null),
-            Product("1", "Json","Json 명함 제작", 60000, null),
-            Product("1", "Json","Json 명함 제작", 60000, null),
-            Product("1", "Json","Json 명함 제작", 60000, null),
-            Product("1", "Json","Json 명함 제작", 60000, null),
-        )
-    }
-    
-    val categories = listOf("전체", "마우스", "키보드", "키캡", "마우스패드")
+    // "전체" 카테고리를 맨 앞에 추가
+    val displayCategories = listOf("전체") + categories
     var selectedCategory by remember { mutableStateOf("전체") }
     var currentRoute by remember { mutableStateOf("home") }
+    
+    // 선택된 카테고리에 따라 상품 필터링
+    val filteredProducts = if (selectedCategory == "전체") {
+        products
+    } else if (selectedCategory == "new") {
+        // "new" 카테고리는 isNew 필드로 필터링
+        products.filter { it.isNew }
+    } else {
+        // 상품의 categories 필드를 사용하여 필터링
+        products.filter { product ->
+            product.categories.any { it.equals(selectedCategory, ignoreCase = true) }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -101,6 +105,7 @@ fun HomeScreen(
             BottomNavigationBar(
                 currentRoute = currentRoute,
                 onItemClick = { route ->
+                    @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
                     currentRoute = route
                     onNavigateToRoute(route)
                 }
@@ -129,14 +134,17 @@ fun HomeScreen(
             // 필터 칩 (전체 너비 차지)
             item(span = { GridItemSpan(2) }) {
                 FilterChips(
-                    categories = categories,
+                    categories = displayCategories,
                     selectedCategory = selectedCategory,
-                    onCategorySelected = { selectedCategory = it }
+                    onCategorySelected = {
+                        @Suppress("ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
+                        selectedCategory = it
+                    }
                 )
             }
                 
-                // 상품 그리드
-                    items(products) { product ->
+            // 상품 그리드
+            items(filteredProducts) { product ->
                         ProductCard(
                             product = product,
                             onClick = { openDetail(product.id) },

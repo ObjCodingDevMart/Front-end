@@ -25,12 +25,13 @@ import com.example.devmart.ui.cart.CartPriceSummaryUiState
 import com.example.devmart.ui.cart.CartOrderInfoUiState
 import com.example.devmart.ui.component.ProductCard
 import com.example.devmart.ui.home.HomeScreen
+import com.example.devmart.ui.home.HomeViewModel
 import com.example.devmart.ui.home.ProductDetailScreen
+import com.example.devmart.ui.home.ProductDetailViewModel
 import com.example.devmart.ui.session.AuthState
 import com.example.devmart.ui.session.SessionViewModel
 import com.example.devmart.ui.payment.PaymentScreen
 import com.example.devmart.ui.payment.PaymentViewModel
-import com.example.devmart.ui.payment.PaymentState
 import com.example.devmart.ui.payment.DaumPostcodeScreen
 import com.example.devmart.ui.payment.OrderProduct
 import com.example.devmart.ui.order.OrderHistoryScreen
@@ -156,8 +157,15 @@ fun AppNav() {
             }
         }
         navigation(startDestination = Route.Home.path, route = Route.MainGraph.path) {
-            composable(Route.Home.path) { 
+            composable(Route.Home.path) {
+                @Suppress("DEPRECATION")
+                val homeViewModel: HomeViewModel = hiltViewModel()
+                val homeState by homeViewModel.uiState.collectAsState()
+                
                 HomeScreen(
+                    products = homeState.products,
+                    categories = homeState.categories.map { it.categoryName },
+                    isLoading = homeState.isLoading,
                     openDetail = { id -> nav.navigate(Route.Detail.withId(id)) },
                     onNavigateToRoute = { route -> 
                         // 하단 네비게이션 바 라우팅 처리
@@ -179,35 +187,32 @@ fun AppNav() {
                     }
                 ) 
             }
-            composable(Route.Detail.path) { backStackEntry ->
-                // TODO: id로 상품 정보 가져오기 (API 연동 시 사용)
-                val id = backStackEntry.arguments?.getString("id").orEmpty()
-                Log.d("AppNav", "ProductDetail: $id")
+            composable(Route.Detail.path) {
+                @Suppress("DEPRECATION")
+                val detailViewModel: ProductDetailViewModel = hiltViewModel()
+                val detailState by detailViewModel.uiState.collectAsState()
                 
-                // 현재 표시 중인 상품 (나중에 API에서 가져오도록 수정)
-                val currentProduct = com.example.devmart.domain.model.Product(
-                    id = id,
-                    brand = "fkqlt",
-                    title = "fkqlt iphone 케이스",
-                    price = 16000,
-                    imageUrl = null
-                )
+                val currentProduct = detailState.product
                 
                 ProductDetailScreen(
                     product = currentProduct,
+                    reviews = detailState.reviews,
+                    isReviewLoading = detailState.isReviewLoading,
                     onBackClick = { nav.popBackStack() },
                     onSearchClick = { nav.navigate(Route.Top100.path) },
                     onLikeClick = { /* TODO: 좋아요 기능 구현 */ },
                     onAddToCart = { /* TODO: 장바구니 추가 기능 구현 */ },
                     onBuyNow = {
                         // 바로 구매: 현재 상품 정보를 Payment로 전달
-                        nav.currentBackStackEntry?.savedStateHandle?.apply {
-                            set("buyNowProductId", currentProduct.id)
-                            set("buyNowProductName", currentProduct.title)
-                            set("buyNowProductBrand", currentProduct.brand)
-                            set("buyNowProductPrice", currentProduct.price)
+                        currentProduct?.let { product ->
+                            nav.currentBackStackEntry?.savedStateHandle?.apply {
+                                set("buyNowProductId", product.id)
+                                set("buyNowProductName", product.title)
+                                set("buyNowProductBrand", product.brand)
+                                set("buyNowProductPrice", product.price)
+                            }
+                            nav.navigate(Route.Payment.path)
                         }
-                        nav.navigate(Route.Payment.path)
                     }
                 )
             }

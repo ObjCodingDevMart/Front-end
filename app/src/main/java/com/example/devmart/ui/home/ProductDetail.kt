@@ -31,6 +31,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -83,6 +84,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun ProductDetailScreen(
     product: Product? = null,
+    reviews: List<Review> = emptyList(),
+    isReviewLoading: Boolean = false,
     onBackClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     onLikeClick: () -> Unit = {},
@@ -204,6 +207,10 @@ fun ProductDetailScreen(
             TabContent(
                 selectedTab = selectedTab,
                 productId = displayProduct.id,
+                detailImageUrl = displayProduct.detailImageUrl,
+                detailContent = displayProduct.detailContent,
+                reviews = reviews,
+                isReviewLoading = isReviewLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = PADDING_H, vertical = 16.dp)
@@ -422,6 +429,10 @@ fun TabItem(
 fun TabContent(
     selectedTab: Int,
     productId: String,
+    detailImageUrl: String?,
+    detailContent: String?,
+    reviews: List<Review> = emptyList(),
+    isReviewLoading: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -432,7 +443,10 @@ fun TabContent(
         when (selectedTab) {
             0 -> {
                 // 상품 상세
-                ProductDetailContent()
+                ProductDetailContent(
+                    detailImageUrl = detailImageUrl,
+                    detailContent = detailContent
+                )
             }
             1 -> {
                 // 구매 안내
@@ -440,7 +454,11 @@ fun TabContent(
             }
             2 -> {
                 // 리뷰
-                ReviewSection(productId = productId)
+                ReviewSection(
+                    productId = productId,
+                    reviews = reviews,
+                    isLoading = isReviewLoading
+                )
             }
         }
     }
@@ -448,39 +466,52 @@ fun TabContent(
 
 @Composable
 fun ProductDetailContent(
+    detailImageUrl: String?,
+    detailContent: String?,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
     ) {
-        // 상품 상세 이미지 영역 (img.png)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(DevGray.copy(alpha = 0.1f)),
-            contentAlignment = Alignment.Center
-        ) {
-            // drawable에서 이미지 로드
-            Image(
-                painter = painterResource(id = R.drawable.img),
+        // 상품 상세 이미지 영역
+        if (!detailImageUrl.isNullOrEmpty()) {
+            AsyncImage(
+                model = detailImageUrl,
                 contentDescription = "상품 상세 이미지",
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(),
-                contentScale = ContentScale.Fit
+                    .fillMaxWidth(),
+                contentScale = ContentScale.FillWidth
             )
+        } else {
+            // detailImageUrl이 없으면 기본 이미지 표시
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(DevGray.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.img),
+                    contentDescription = "상품 상세 이미지",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(),
+                    contentScale = ContentScale.Fit
+                )
+            }
         }
         
         Spacer(modifier = Modifier.height(16.dp))
         
         // 상품 정보 텍스트
-        ProductDetailInfo()
+        ProductDetailInfo(detailContent = detailContent)
     }
 }
 
 @Composable
 fun ProductDetailInfo(
+    detailContent: String?,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -497,29 +528,7 @@ fun ProductDetailInfo(
         )
         
         Text(
-            text = """
-                • 제품명: fkqlt iphone 케이스
-                • 브랜드: fkqlt
-                • 재질: 실리콘 소재로 제작된 고품질 케이스
-                • 색상: 다양한 색상 옵션 제공
-                • 호환 모델: iPhone 14, iPhone 14 Pro, iPhone 15, iPhone 15 Pro
-                
-                [제품 특징]
-                - 충격 흡수력이 뛰어난 실리콘 소재
-                - 미끄럼 방지 처리로 안전한 사용
-                - 카메라 렌즈 보호 기능
-                - 얇고 가벼운 디자인으로 휴대성 우수
-                
-                [사용 방법]
-                1. 스마트폰 뒷면을 깨끗이 닦아주세요
-                2. 케이스를 스마트폰에 맞게 끼워주세요
-                3. 가장자리가 잘 맞는지 확인해주세요
-                
-                [주의사항]
-                - 직사광선을 피해 보관해주세요
-                - 화학 용품과의 접촉을 피해주세요
-                - 정기적으로 청소해주세요
-            """.trimIndent(),
+            text = detailContent ?: "상품 상세 정보가 없습니다.",
             fontSize = 14.sp,
             color = DevBlack,
             lineHeight = 22.sp
@@ -620,70 +629,12 @@ fun GuideSection(
 @Composable
 fun ReviewSection(
     @Suppress("UNUSED_PARAMETER") productId: String,
+    reviews: List<Review> = emptyList(),
+    isLoading: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    // 더미 리뷰 데이터
-    val reviews = remember {
-        listOf(
-            Review(
-                id = "1",
-                userId = "user1",
-                userName = "김**",
-                rating = 5,
-                content = "정말 만족스러운 제품이에요! 품질도 좋고 배송도 빠르네요. 다음에도 또 구매할게요.",
-                date = "2024.11.05",
-                images = listOf()
-            ),
-            Review(
-                id = "2",
-                userId = "user2",
-                userName = "이**",
-                rating = 4,
-                content = "가격 대비 괜찮은 것 같아요. 다만 색상이 사진보다 조금 다르게 보이긴 해요.",
-                date = "2024.11.03",
-                images = listOf()
-            ),
-            Review(
-                id = "3",
-                userId = "user3",
-                userName = "박**",
-                rating = 5,
-                content = "완벽해요! 디자인도 예쁘고 실용적이에요. 추천합니다!",
-                date = "2024.11.01",
-                images = listOf()
-            ),
-            Review(
-                id = "4",
-                userId = "user4",
-                userName = "최**",
-                rating = 3,
-                content = "무난한 제품이에요. 특별히 좋거나 나쁘지는 않네요.",
-                date = "2024.10.28",
-                images = listOf()
-            ),
-            Review(
-                id = "5",
-                userId = "user5",
-                userName = "정**",
-                rating = 5,
-                content = "친구 추천으로 샀는데 정말 좋아요! 가성비 최고예요. 배송도 빠르고 포장도 깔끔했어요.",
-                date = "2024.10.25",
-                images = listOf()
-            ),
-            Review(
-                id = "6",
-                userId = "user6",
-                userName = "강**",
-                rating = 4,
-                content = "전반적으로 만족스러워요. 다만 사이즈가 생각보다 작을 수 있으니 참고하세요.",
-                date = "2024.10.20",
-                images = listOf()
-            )
-        )
-    }
-    
     // 리뷰 통계
-    val averageRating = reviews.map { it.rating }.average()
+    val averageRating = if (reviews.isNotEmpty()) reviews.map { it.rating }.average() else 0.0
     val totalReviews = reviews.size
     
     Column(modifier = modifier.fillMaxWidth()) {
@@ -696,16 +647,38 @@ fun ReviewSection(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // 리뷰 목록
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            reviews.forEach { review ->
-                ReviewItem(
-                    review = review,
-                    modifier = Modifier.fillMaxWidth()
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = DevNeyvy)
+            }
+        } else if (reviews.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "아직 리뷰가 없습니다.",
+                    color = DevGray,
+                    fontSize = 14.sp
                 )
+            }
+        } else {
+            // 리뷰 목록
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                reviews.forEach { review ->
+                    ReviewItem(
+                        review = review,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }

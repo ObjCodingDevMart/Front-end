@@ -81,7 +81,7 @@ fun ProductCard(
                     .padding(12.dp)
             ) {
                 Text(
-                    text = product.brand,
+                    text = product.title,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 2,
@@ -91,7 +91,7 @@ fun ProductCard(
                 
 
                 Text(
-                    text = "Json 명함 제작",
+                    text = product.brand,
                     style = TextStyle(
                         fontSize = 9.12.sp,
                         lineHeight = 13.68.sp,

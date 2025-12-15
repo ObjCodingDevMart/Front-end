@@ -17,10 +17,26 @@ class ProductRepositoryImpl @Inject constructor(
     private val api = retrofit.create(ProductApi::class.java)
 
     override suspend fun list(): Result<List<Product>> =
-        try { Result.Ok(api.list().map { it.toDomain() }) }
-        catch (t: Throwable) { Result.Err(t.message ?: "list failed", t) }
+        try {
+            val response = api.list()
+            if (response.success) {
+                Result.Ok(response.result.map { it.toDomain() })
+            } else {
+                Result.Err(response.message)
+            }
+        } catch (t: Throwable) {
+            Result.Err(t.message ?: "상품 목록 조회 실패", t)
+        }
 
     override suspend fun detail(id: String): Result<Product> =
-        try { Result.Ok(api.detail(id).toDomain()) }
-        catch (t: Throwable) { Result.Err(t.message ?: "detail failed", t) }
+        try {
+            val response = api.detail(id.toLong())
+            if (response.success) {
+                Result.Ok(response.result.toDomain())
+            } else {
+                Result.Err(response.message)
+            }
+        } catch (t: Throwable) {
+            Result.Err(t.message ?: "상품 상세 조회 실패", t)
+        }
 }
